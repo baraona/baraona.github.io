@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alejandro Baraona</title>
+  <meta name="description" content="Alejandro Baraona is an ECE graduate student at UT Austin researching personalized speech recognition for people with disordered speech." />
+  <meta property="og:title" content="Alejandro Baraona" />
+  <meta property="og:description" content="ECE graduate student at UT Austin. Researcher at the Wang Lab." />
+  <meta property="og:url" content="https://baraona.org" />
+  <link rel="canonical" href="https://baraona.org" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #BF5700;
+      --orange-light: #f4e6da;
+      --text: #1a1a1a;
+      --muted: #555;
+      --light: #888;
+      --border: #ddd;
+      --bg: #fff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--orange); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: sticky;
+      top: 40px;
+    }
+
+    .sidebar img {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 16px;
+      border: 3px solid var(--orange-light);
+    }
+
+    /* placeholder if no photo */
+    .photo-placeholder {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: var(--orange-light);
+      border: 3px solid #e8c8b0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--orange);
+      font-size: 48px;
+      font-family: 'Lora', serif;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .sidebar h1 {
+      font-family: 'Lora', serif;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .sidebar .tagline {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .sidebar-links {
+      list-style: none;
+      font-size: 14px;
+    }
+
+    .sidebar-links li {
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+
+    .sidebar-links li span {
+      color: var(--light);
+      margin-right: 4px;
+    }
+
+    .sidebar-links a {
+      color: var(--muted);
+    }
+
+    .sidebar-links a:hover {
+      color: var(--orange);
+    }
+
+    /* Main content */
+    .main section {
+      margin-bottom: 44px;
+    }
+
+    .main h2 {
+      font-family: 'Lora', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--orange);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+    }
+
+    .main p {
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .main p:last-child { margin-bottom: 0; }
+
+    /* News */
+    .news-list {
+      list-style: none;
+      font-size: 15px;
+    }
+
+    .news-list li {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .news-list li:last-child { border-bottom: none; }
+
+    .news-year {
+      color: var(--orange);
+      font-weight: 600;
+      font-size: 14px;
+      padding-top: 1px;
+    }
+
+    .news-text { color: var(--muted); }
+
+    /* Projects */
+    .project {
+      margin-bottom: 22px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .project:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+    .project-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .project-meta {
+      font-size: 14px;
+      color: var(--light);
+      margin-bottom: 6px;
+    }
+
+    .project p {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    /* Experience */
+    .exp {
+      margin-bottom: 20px;
+    }
+
+    .exp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .exp-role {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .exp-date {
+      font-size: 13px;
+      color: var(--light);
+      white-space: nowrap;
+    }
+
+    .exp-org {
+      font-size: 14px;
+      color: var(--orange);
+      margin-bottom: 6px;
+    }
+
+    .exp p {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    /* Skills */
+    .skills-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    .skills-table tr {
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .skills-table tr:last-child { border-bottom: none; }
+
+    .skills-table td {
+      padding: 7px 0;
+      vertical-align: top;
+    }
+
+    .skills-table td:first-child {
+      font-weight: 600;
+      color: var(--muted);
+      width: 120px;
+      padding-right: 16px;
+    }
+
+    .skills-table td:last-child {
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* Awards */
+    .award-list {
+      list-style: disc;
+      padding-left: 20px;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .award-list li {
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .sidebar {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: flex-start;
+      }
+      .sidebar img, .photo-placeholder {
+        width: 100px;
+        height: 100px;
+        font-size: 32px;
+        margin-bottom: 0;
+      }
+      .sidebar-info { flex: 1; min-width: 160px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="photo-placeholder" aria-hidden="true">A</div>
+    <!-- Replace the div above with: <img src="photo.jpg" alt="Alejandro Baraona" /> once you have a photo -->
+    <div class="sidebar-info">
+      <h1>Alejandro Baraona</h1>
+      <p class="tagline">M.S. ECE · UT Austin<br />AI &amp; Speech Systems</p>
+      <ul class="sidebar-links">
+        <li><span>📍</span> Austin, TX</li>
+        <li><span>✉</span> <a href="mailto:ajb6884@my.utexas.edu">ajb6884 [at] utexas [dot] edu</a></li>
+        <li><span></span> <a href="https://linkedin.com/in/alejandrobaraona" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><span></span> <a href="https://github.com/baraona" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <section id="about">
+      <h2>About me</h2>
+      <p>
+        I'm a graduate student in Electrical and Computer Engineering at the University of Texas at Austin, where I'm a Graduate Research Assistant in the <a href="#">Wang Lab</a>. My research focuses on building personalized automatic speech recognition systems for individuals with disordered speech — including stuttering, dysarthria, and apraxia — with adaptive pipelines that improve over time for each user.
+      </p>
+      <p>
+        I completed my B.S. in ECE at Northeastern University, where I worked in the Action Lab on human-robot collaboration and ran engineering workshops through the Sherman Center. Before graduate school, I spent two years as an Electronic &amp; Software Integration Technician at Vigilant Biosciences, building sensor systems and software tools for FDA-regulated medical devices.
+      </p>
+      <p>
+        I'm interested in the intersection of AI, signal processing, and accessibility — building systems that work reliably for people who are often underserved by off-the-shelf technology.
+      </p>
+    </section>
+
+    <section id="news">
+      <h2>News</h2>
+      <ul class="news-list">
+        <li>
+          <span class="news-year">2025</span>
+          <span class="news-text">Started as a Graduate Research Assistant at the Wang Lab, UT Austin, working on personalized ASR for disordered speech.</span>
+        </li>
+        <li>
+          <span class="news-year">2025</span>
+          <span class="news-text">VitalLink presented at Northeastern's 41st ECE Capstone Design Competition.</span>
+        </li>
+        <li>
+          <span class="news-year">2023</span>
+          <span class="news-text">Named a National HSF Scholar and National Merit Scholar.</span>
+        </li>
+        <li>
+          <span class="news-year">2023</span>
+          <span class="news-text">Nominated via the UPLIFT Program for Human-Robot Collaboration research at the Action Lab, Northeastern.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section id="research">
+      <h2>Research</h2>
+
+      <div class="project">
+        <p class="project-title">Personalized ASR for Disordered Speech</p>
+        <p class="project-meta">Wang Lab · UT Austin · 2025 – present</p>
+        <p>Developing adaptive automatic speech recognition pipelines for individuals with stuttering, dysarthria, and apraxia. The system is designed to learn from each user over time, closing the performance gap between neurotypical and disordered speakers.</p>
+      </div>
+
+      <div class="project">
+        <p class="project-title">Human-Robot Collaboration</p>
+        <p class="project-meta">Action Lab · Northeastern University · 2024</p>
+        <p>Nominated via the UPLIFT Program to assist in HRC research. Calibrated motion-capture data in Qualisys Track Manager to analyze discrete and rhythmic motor patterns.</p>
+      </div>
+    </section>
+
+    <section id="projects">
+      <h2>Projects</h2>
+
+      <div class="project">
+        <p class="project-title">VitalLink — Wearable Triage System</p>
+        <p class="project-meta">Capstone · Northeastern University · 2024–2025 &nbsp;·&nbsp; <a href="#">GitHub</a></p>
+        <p>BLE-enabled wristband and base-station pipeline for continuous patient vitals monitoring (heart rate, SpO2, temperature, motion) in hospital waiting rooms. Generates real-time severity scores to help clinicians prioritize care. Designed custom PCB hardware and firmware; built the clinical-facing web dashboard.</p>
+      </div>
+
+      <div class="project">
+        <p class="project-title">CaptionXR — Real-Time XR Captioning</p>
+        <p class="project-meta">Personal project &nbsp;·&nbsp; <a href="#">GitHub</a></p>
+        <p>Unity-based live caption overlay system that renders real-time speech captions within an XR environment, integrating speech recognition with spatial UI rendering for accessibility in extended reality.</p>
+      </div>
+    </section>
+
+    <section id="experience">
+      <h2>Experience</h2>
+
+      <div class="exp">
+        <div class="exp-header">
+          <span class="exp-role">Electronic &amp; Software Integration Technician</span>
+          <span class="exp-date">Jun 2021 – Sept 2023</span>
+        </div>
+        <p class="exp-org">Vigilant Biosciences, Inc. · Austin, TX</p>
+        <p>Built an Arduino-based 5-parameter environmental sensor system (temperature, pressure, humidity, CO₂, UV) for FDA compliance verification of medical devices. Validated an oral cancer detection algorithm end-to-end and developed Python UI components to reduce manual verification steps. Performed statistical analysis in Excel to confirm measurement accuracy across device components.</p>
+      </div>
+
+      <div class="exp">
+        <div class="exp-header">
+          <span class="exp-role">EE Specialist</span>
+          <span class="exp-date">2023 – 2025</span>
+        </div>
+        <p class="exp-org">Sherman Center · Northeastern University · Boston, MA</p>
+        <p>Designed and hosted workshops on microcontrollers, soldering, and sensors. Managed lab equipment and supported student project teams during weekly office hours.</p>
+      </div>
+
+      <div class="exp">
+        <div class="exp-header">
+          <span class="exp-role">Student Staff</span>
+          <span class="exp-date">2023 – 2025</span>
+        </div>
+        <p class="exp-org">Center for STEM Education · Northeastern University · Boston, MA</p>
+        <p>Designed STEM outreach programs for Boston public schools, produced published technical articles, and co-led Building Bridges — a semi-annual ECE recruitment event.</p>
+      </div>
+    </section>
+
+    <section id="skills">
+      <h2>Technical Skills</h2>
+      <table class="skills-table">
+        <tr>
+          <td>Languages</td>
+          <td>Python, C++, JavaScript, Java, SQL, RISC-V</td>
+        </tr>
+        <tr>
+          <td>Libraries</td>
+          <td>NumPy, Pandas, Matplotlib</td>
+        </tr>
+        <tr>
+          <td>Tools</td>
+          <td>Git/GitHub, VS Code, Docker, MATLAB, Vivado, LTSpice, Adobe Suite</td>
+        </tr>
+        <tr>
+          <td>Hardware</td>
+          <td>Arduino, Raspberry Pi, PCB Design, Oscilloscope, Logic Analyzer, Soldering</td>
+        </tr>
+        <tr>
+          <td>OS</td>
+          <td>Linux/Ubuntu</td>
+        </tr>
+      </table>
+    </section>
+
+    <section id="awards">
+      <h2>Honors &amp; Awards</h2>
+      <ul class="award-list">
+        <li>Northeastern National Recognition Program Scholarship ($40,000)</li>
+        <li>NUAccelerate Scholarship</li>
+        <li>National Grid CECA Scholarship ($2,000)</li>
+        <li>National 2023 HSF Scholar</li>
+        <li>UPLIFT Program Scholar</li>
+        <li>National Merit Scholar</li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+</body>
+</html>
