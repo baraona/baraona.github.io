@@ -349,6 +349,13 @@ collections:
         widget: string
         required: false
         hint: Fill this in (and leave the file empty) to make this a folder.
+      - label: Folder cover
+        name: cover
+        widget: image
+        required: false
+        media_folder: /assets/life
+        public_folder: /assets/life
+        hint: Only for folders. Leave empty to use the folder's first photo.
       - label: Photo, video, or file
         name: file
         widget: file
@@ -382,6 +389,13 @@ collections:
             widget: string
             required: false
             hint: Fill this in (and leave the file empty) to make this a folder.
+          - label: Folder cover
+            name: cover
+            widget: image
+            required: false
+            media_folder: /assets/life
+            public_folder: /assets/life
+            hint: Only for folders. Leave empty to use the folder's first photo.
           - label: Photo, video, or file
             name: file
             widget: file
@@ -415,6 +429,13 @@ collections:
                 widget: string
                 required: false
                 hint: Fill this in (and leave the file empty) to make this a folder.
+              - label: Folder cover
+                name: cover
+                widget: image
+                required: false
+                media_folder: /assets/life
+                public_folder: /assets/life
+                hint: Only for folders. Leave empty to use the folder's first photo.
               - label: Photo, video, or file
                 name: file
                 widget: file

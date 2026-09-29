@@ -29,7 +29,7 @@
           {% include link.html link=link key=k li=true %}
           {%- endfor %}
           {%- if me.cv %}
-          <li><a href="{{ me.cv }}" target="_blank" rel="noopener" data-edit-file="profile.cv" data-accept="application/pdf,.pdf" data-folder="assets/docs">CV (PDF)</a></li>
+          <li><a href="{{ me.cv | relative_url }}" target="_blank" rel="noopener" data-edit-file="profile.cv" data-accept="application/pdf,.pdf" data-folder="assets/docs">CV</a></li>
           {%- endif %}
         </ul>
       </div>

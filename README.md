@@ -80,7 +80,10 @@ GitHub and make a new one.
 On the Life page, sign in and click **Edit page**, then **+ Add folder** or
 **+ Add photo or video**. Folders open in place (their address, like
 baraona.org/life/#sienna, can be shared) and can hold more folders. Uploads are
-stored in `assets/life/`. /admin shows folders up to three levels deep.
+stored in `assets/life/`. A folder's cover is its first photo unless I pick
+one with the image button on the folder (any photo inside it, or a new upload).
+Drop a photo on the middle of a folder's cover to put it inside; drop it near
+the edges to reorder. /admin shows folders up to three levels deep.
 
 - Photos: JPG, PNG, or WebP. iPhone HEIC photos don't display in most browsers,
   so export them as JPEG first (on iPhone: Settings → Camera → Formats →

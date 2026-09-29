@@ -47,6 +47,7 @@ const data = {}; // file -> contents when Edit was clicked
 const work = {}; // file -> working copy with your edits
 const origin = new WeakMap(); // list item in work -> { list, index } it came from in data
 const uploads = new Map(); // repo path -> base64 contents of a new file
+const previews = new Map(); // repo path -> a local address for showing that new file before it's saved
 let fonts;
 let ui;
 
@@ -269,8 +270,9 @@ function sync(doc, node, orig, next) {
   if (isObject(next) && isObject(orig) && YAML.isMap(node)) {
     Object.keys(orig).filter((k) => !(k in next)).forEach((k) => node.delete(k));
     for (const [k, v] of Object.entries(next)) {
+      if (!(k in orig)) { insertInOrder(doc, node, k, newNode(doc, v)); continue; }
       const child = node.get(k, true);
-      const synced = k in orig ? sync(doc, child, orig[k], v) : newNode(doc, v);
+      const synced = sync(doc, child, orig[k], v);
       if (synced !== child) node.set(k, synced);
     }
     return node;
@@ -286,10 +288,19 @@ function sync(doc, node, orig, next) {
 
 // New YAML in the same style as the hand-written files: fields in the usual
 // order, and short lists like skills on one line.
-const FIELD_ORDER = ['heading', 'title', 'name', 'label', 'file', 'caption', 'where', 'date', 'dates', 'text',
+const FIELD_ORDER = ['heading', 'title', 'name', 'label', 'cover', 'file', 'caption', 'where', 'date', 'dates', 'text',
   'description', 'skills', 'detail', 'year', 'url', 'alt', 'image', 'image_alt', 'links', 'items'];
+const rank = (k) => (FIELD_ORDER.includes(k) ? FIELD_ORDER.indexOf(k) : FIELD_ORDER.length);
+
+// Add a field to an existing entry in its usual place (a folder's cover goes under its title).
+function insertInOrder(doc, map, key, value) {
+  const pair = doc.createPair(key, value);
+  const at = map.items.findIndex((p) => rank(String(p.key?.value ?? p.key)) > rank(key));
+  if (at === -1) map.items.push(pair);
+  else map.items.splice(at, 0, pair);
+}
+
 function newNode(doc, value) {
-  const rank = (k) => (FIELD_ORDER.includes(k) ? FIELD_ORDER.indexOf(k) : FIELD_ORDER.length);
   const order = (v) => Array.isArray(v) ? v.map(order)
     : isObject(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => rank(a) - rank(b)).map(([k, x]) => [k, order(x)]))
     : v;
@@ -512,7 +523,9 @@ function addItemTools(item) {
   const list = item.parentElement.closest('[data-edit-list]');
   const name = (list && list.dataset.itemName) || 'item';
   const hasImage = Boolean(item.querySelector('.entry-media'));
-  const image = !item.matches('.entry') ? ''
+  const image = item.matches('.tile--folder')
+    ? `<button type="button" data-tool="cover" title="Choose the cover image" aria-label="Choose the cover image">${ICONS.image}</button>`
+    : !item.matches('.entry') ? ''
     : hasImage ? `<button type="button" data-tool="unimage" title="Remove image" aria-label="Remove image">${ICONS.noImage}</button>`
     : `<button type="button" data-tool="image" title="Add image" aria-label="Add image">${ICONS.image}</button>`;
   const tools = el(`
@@ -613,7 +626,7 @@ function startDrag(e, item) {
   if (e.button > 0) return;
   e.preventDefault();
   const handle = e.currentTarget;
-  handle.setPointerCapture(e.pointerId);
+  try { handle.setPointerCapture(e.pointerId); } catch {} // keeps the drag going if the pointer leaves the handle
   const kind = item.parentElement.closest('[data-edit-list]').dataset.editKind;
   const marker = el('<div class="edit-drop-marker"></div>');
   ui.append(marker);
@@ -672,8 +685,12 @@ function nearestList(x, y, item, kind) {
 function findDrop(x, y, item, kind) {
   const hit = document.elementFromPoint(x, y);
   if (!hit) return null;
-  const folder = hit.closest('.folder-open')?.closest('.tile--folder'); // over a folder's cover: drop into it
-  if (kind === 'gallery' && folder && folder !== item && !item.contains(folder)) {
+  // Over the middle of a folder's cover: put it in the folder. Near the edges: reorder.
+  const cover = hit.closest('.folder-open');
+  const folder = cover?.closest('.tile--folder');
+  const box = cover?.getBoundingClientRect();
+  const middle = box && Math.abs(x - (box.left + box.width / 2)) < box.width / 4 && Math.abs(y - (box.top + box.height / 2)) < box.height / 4;
+  if (kind === 'gallery' && middle && folder !== item && !item.contains(folder)) {
     const list = folder.querySelector(':scope > .folder-view > [data-edit-list]');
     return { list, index: 0, folder };
   }
@@ -688,7 +705,9 @@ function findDrop(x, y, item, kind) {
   const n = rects.indexOf(rects.reduce((a, b) => (dist(b) < dist(a) ? b : a)));
   const r = rects[n];
   const style = getComputedStyle(list);
-  const inRow = style.display.includes('flex') && !style.flexDirection.startsWith('column');
+  const columns = style.columnCount !== 'auto' || style.columnWidth !== 'auto'; // the Life grid
+  const inRow = (style.display.includes('flex') && !style.flexDirection.startsWith('column'))
+    || (columns && y >= r.top && y <= r.bottom); // side by side: left or right of the item decides
   const before = inRow ? x < r.left + r.width / 2 : y < r.top + r.height / 2;
   const line = inRow
     ? { top: r.top, left: before ? r.left - 4 : r.right + 2, width: 2, height: r.height }
@@ -702,6 +721,7 @@ function renumber() {
     const n = itemsOf(folder.querySelector(':scope > .folder-view > [data-edit-list]')).length;
     const count = folder.querySelector(':scope > .folder-name .folder-count');
     if (count) count.textContent = `${n} ${n === 1 ? 'item' : 'items'}`;
+    setCover(folder, getPath(`${folder.dataset.editItem}.cover`)); // an automatic cover follows the first photo
   });
   for (const list of document.querySelectorAll('[data-edit-list]')) {
     const listKey = list.dataset.editList;
@@ -733,6 +753,7 @@ function runTool(button) {
       addItem(list, template);
     }
   }
+  if (tool === 'cover') showCoverPicker(item, button);
   if (tool === 'remove') {
     const inside = itemsOf(item.querySelector('[data-edit-list]') || item).length;
     if (item.matches('.tile--folder') && inside && !confirm(`Remove this folder and the ${inside} thing${inside > 1 ? 's' : ''} in it?`)) return;
@@ -776,14 +797,16 @@ function chooseFile(accept, then) {
 }
 
 // Upload `file` for the field at `key`. A file of the same type replaces the
-// old one at the same address (so links to your CV keep working); anything
-// else is saved alongside it under its own name.
+// old one at the same address (so links to your CV keep working), unless
+// something else on the site also uses that file; otherwise it's saved
+// alongside under its own name.
 function assignFile(target, file, key = target.dataset.editFile, folder = target.dataset.folder) {
   const ext = (name) => (name.match(/\.([^./]+)$/) || ['', ''])[1].toLowerCase();
   const old = String(getPath(key) || '');
   const oldPath = old.replace(/^\//, '');
+  const usedElsewhere = oldPath && JSON.stringify(work).split(oldPath).length - 1 > 1;
   let path = oldPath;
-  if (!oldPath || /^[a-z]+:/i.test(old) || ext(oldPath) !== ext(file.name)) {
+  if (!oldPath || usedElsewhere || /^[a-z]+:/i.test(old) || ext(oldPath) !== ext(file.name)) {
     const dir = folder || oldPath.split('/').slice(0, -1).join('/') || 'assets/docs';
     const name = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/-+/g, '-');
     path = `${dir}/${name}`;
@@ -792,7 +815,11 @@ function assignFile(target, file, key = target.dataset.editFile, folder = target
   const reader = new FileReader();
   reader.onload = () => {
     uploads.set(path, reader.result.split(',')[1]);
-    preview(target, URL.createObjectURL(file), file.type);
+    const url = URL.createObjectURL(file);
+    previews.set(path, url);
+    // Everything showing this field (both CV links, say) shows the new file.
+    const same = document.querySelectorAll(`[data-edit-file="${CSS.escape(key)}"]`);
+    (same.length ? [...same] : [target]).forEach((t) => preview(t, url, file.type));
     status(`“${file.name}” will be uploaded when you save.`);
     refreshBar();
   };
@@ -805,6 +832,73 @@ function preview(target, url, type) {
     type.startsWith('image/') ? `<img src="${url}" alt="" />` :
     type.startsWith('video/') ? `<video src="${url}" controls playsinline></video>` :
     '<span class="tile-file"><span class="tile-file-ext">FILE</span></span>';
+}
+
+// ------------------------------------------------------------
+// Folder covers
+// ------------------------------------------------------------
+
+const IMAGE_FILE = /\.(jpe?g|png|webp|gif|avif|jfif)$/i;
+
+// Pick one of the folder's photos (or one in a folder inside it), upload a new
+// image, or go back to using the first photo automatically.
+function showCoverPicker(folder, button) {
+  hideLinkPop();
+  const key = folder.dataset.editItem;
+  const photos = [];
+  const collect = (items) => (items || []).forEach((i) => {
+    if (i.file && IMAGE_FILE.test(i.file)) photos.push(i.file);
+    if (!i.file) collect(i.items);
+  });
+  collect(getPath(`${key}.items`));
+  const current = getPath(`${key}.cover`);
+  const src = (path) => previews.get(String(path).replace(/^\//, '')) || path;
+  const pop = el(`
+    <div class="edit-pop edit-cover-pop" role="group" aria-label="Folder cover">
+      <p class="edit-pop-title">Folder cover</p>
+      ${photos.length ? '<div class="edit-cover-grid"></div>' : '<p class="edit-pop-note">No photos in this folder yet.</p>'}
+      <div class="edit-row">
+        <button type="button" data-pop="upload">Upload an image</button>
+        <button type="button" data-pop="auto"${current ? '' : ' disabled'}>Use the first photo</button>
+      </div>
+    </div>`);
+  const grid = pop.querySelector('.edit-cover-grid');
+  [...new Set(photos)].forEach((path) => {
+    const choice = el(`<button type="button" class="edit-cover-choice" aria-label="Use this photo"><img alt="" /></button>`);
+    choice.querySelector('img').src = src(path);
+    choice.classList.toggle('is-current', path === current);
+    choice.addEventListener('click', () => { setCover(folder, path); hideLinkPop(); });
+    grid.append(choice);
+  });
+  pop.addEventListener('click', (e) => {
+    const act = e.target.closest('[data-pop]')?.dataset.pop;
+    if (act === 'auto') { setCover(folder, null); hideLinkPop(); }
+    if (act === 'upload') {
+      chooseFile('image/*', (file) => {
+        const coverEl = folder.querySelector(':scope > .folder-open .folder-cover');
+        assignFile(coverEl, file, `${key}.cover`, 'assets/life');
+        hideLinkPop();
+      });
+    }
+  });
+  pop.link = button;
+  ui.append(pop);
+  const r = button.getBoundingClientRect();
+  pop.style.top = `${r.bottom + scrollY + 6}px`;
+  pop.style.left = `${Math.max(8, Math.min(r.right + scrollX - pop.offsetWidth, scrollX + innerWidth - pop.offsetWidth - 8))}px`;
+  setTimeout(() => document.addEventListener('pointerdown', function away(e) {
+    if (!pop.contains(e.target)) { hideLinkPop(); document.removeEventListener('pointerdown', away); }
+  }));
+}
+
+function setCover(folder, path) {
+  const key = `${folder.dataset.editItem}.cover`;
+  if ((getPath(key) || null) !== (path || null)) setField(key, path || '');
+  const coverEl = folder.querySelector(':scope > .folder-open .folder-cover');
+  const first = (getPath(`${folder.dataset.editItem}.items`) || []).find((i) => i.file && IMAGE_FILE.test(i.file));
+  const shown = path || (first && first.file);
+  const src = shown ? previews.get(String(shown).replace(/^\//, '')) || shown : '';
+  if ((coverEl.querySelector('img')?.getAttribute('src') || '') !== src) coverEl.innerHTML = src ? `<img src="${src}" alt="" />` : '';
 }
 
 // ------------------------------------------------------------
