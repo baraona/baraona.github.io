@@ -9,7 +9,6 @@ items:
     description: >-
       Developing adaptive automatic speech recognition pipelines for people who stutter or have dysarthria or apraxia. The system learns from each user over time, closing the performance gap between typical and disordered speech.
     skills: [Speech recognition, Machine learning, Python]
-    links: []
 
   - title: "Human-Robot Collaboration"
     where: "Action Lab, Northeastern University"

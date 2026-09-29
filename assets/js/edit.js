@@ -186,9 +186,9 @@ function parseKey(key) {
   return { file: `_data/${file}.yml`, keys: keys.map((k) => (/^\d+$/.test(k) ? Number(k) : k)) };
 }
 
-function getPath(key) {
+function getPath(key, from = work) {
   const { file, keys } = parseKey(key);
-  return keys.reduce((o, k) => (o == null ? undefined : o[k]), work[file]);
+  return keys.reduce((o, k) => (o == null ? undefined : o[k]), from[file]);
 }
 
 function setPath(key, value) {
@@ -571,8 +571,11 @@ function addItem(list, template = templatesFor(list)[0]) {
 function removeItem(item) {
   const key = item.dataset.editItem;
   const cut = key.lastIndexOf('.');
-  const items = getPath(key.slice(0, cut));
+  const listKey = key.slice(0, cut);
+  const items = getPath(listKey);
   if (Array.isArray(items)) items.splice(Number(key.slice(cut + 1)), 1);
+  // A list that only existed because something was added and removed again isn't saved.
+  if (Array.isArray(items) && !items.length && getPath(listKey, data) === undefined) deletePath(listKey);
   if (item.contains(document.activeElement)) hideLinkPop();
   item.remove();
   renumber();
