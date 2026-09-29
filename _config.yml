@@ -1,36 +1,6 @@
-# ──────────────────────────────────────────────────────────────
-#  Site settings. Edit your personal info here.
-#  After changing this file, GitHub Pages rebuilds in ~1 minute.
-# ──────────────────────────────────────────────────────────────
-
+# Technical settings only. Your content lives in _data/ and is easiest
+# to edit at https://baraona.org/admin
 title: Alejandro Baraona
-description: >-
-  Alejandro Baraona is an ECE graduate student at UT Austin researching
-  personalized speech recognition for people with disordered speech.
 url: https://baraona.org
-
-name: Alejandro Baraona
-tagline: >-
-  Electrical and computer engineer. MS student at UT Austin, BS from
-  Northeastern. I build AI and hardware for biomedical and assistive devices.
-photo: assets/images/AlejandroBaraona.jpeg
-cv: assets/docs/BaraonaResume.pdf
-location: Austin, TX
-
-# Optional one-line note shown under your tagline. Delete the line to hide it.
-status: Seeking summer 2027 internships and full-time roles from January 2028 in the Boston area.
-
-# Contact links, shown in this order.
-links:
-  - label: Email
-    url: mailto:ajb6884@my.utexas.edu
-  - label: LinkedIn
-    url: https://linkedin.com/in/alejandrobaraona
-  - label: GitHub
-    url: https://github.com/baraona
-  - label: Google Scholar
-    url: https://scholar.google.com/citations?hl=en&user=ntGa930AAAAJ
-
-# Files Jekyll should not publish.
 exclude:
   - README.md

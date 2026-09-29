@@ -1,0 +1,120 @@
+---
+title: Life
+# Built from _data/gallery.yml. Add photos at https://baraona.org/admin
+---
+{%- assign me = site.data.profile -%}
+{%- assign g = site.data.gallery -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Life · {{ me.name }}</title>
+  <meta name="description" content="{{ g.intro | default: 'Personal photos' | strip }}" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="canonical" href="{{ site.url }}/life/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/site.css" />
+</head>
+<body class="wide">
+  <a class="skip" href="#content">Skip to content</a>
+
+  <header class="bar">
+    <nav class="bar-inner" aria-label="Site">
+      <a class="bar-name" href="/">{{ me.name }}</a>
+      <ul class="bar-links">
+        <li><a href="/">Work</a></li>
+        <li><a href="/life/" aria-current="page">Life</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="page page--wide" id="content">
+    <header class="life-head">
+      <h1>Life</h1>
+      {%- if g.intro %}<p class="tagline">{{ g.intro }}</p>{% endif %}
+    </header>
+
+    {%- if g.items.size > 0 %}
+    <ul class="gallery">
+      {%- for item in g.items %}
+        {%- assign ext = item.file | split: '.' | last | downcase -%}
+        {%- assign kind = 'file' -%}
+        {%- if ext == 'jpg' or ext == 'jpeg' or ext == 'png' or ext == 'webp' or ext == 'gif' or ext == 'avif' %}{% assign kind = 'image' %}{% endif -%}
+        {%- if ext == 'mp4' or ext == 'webm' or ext == 'm4v' or ext == 'mov' %}{% assign kind = 'video' %}{% endif %}
+      <li class="tile tile--{{ kind }}">
+        {%- if kind == 'image' %}
+        <button class="tile-open" type="button" data-kind="image" data-src="{{ item.file }}" data-caption="{{ item.caption | escape }}" data-date="{{ item.date | escape }}" aria-label="Open photo{% if item.caption %}: {{ item.caption | escape }}{% endif %}">
+          <img src="{{ item.file }}" alt="{{ item.alt | default: item.caption | escape }}" loading="lazy" />
+        </button>
+        {%- elsif kind == 'video' %}
+        <video src="{{ item.file }}" controls preload="metadata" playsinline{% if item.poster %} poster="{{ item.poster }}"{% endif %}></video>
+        {%- else %}
+        <a class="tile-file" href="{{ item.file }}" target="_blank" rel="noopener">
+          <span class="tile-file-ext">{{ ext | upcase }}</span>
+          <span class="tile-file-name">{{ item.file | split: '/' | last }}</span>
+        </a>
+        {%- endif %}
+        {%- if item.caption or item.date %}
+        <p class="tile-caption">
+          {%- if item.caption %}{{ item.caption }}{% endif -%}
+          {%- if item.date %} <span class="tile-date">{{ item.date }}</span>{% endif -%}
+        </p>
+        {%- endif %}
+      </li>
+      {%- endfor %}
+    </ul>
+    {%- else %}
+    <p class="empty">No photos yet. Add some at <a href="/admin/">/admin</a>.</p>
+    {%- endif %}
+  </main>
+
+  <footer class="foot">
+    <p>{{ me.name }}, {{ me.location }}.</p>
+    <p><a href="/">Back to work</a></p>
+  </footer>
+
+  <dialog class="lightbox" aria-label="Photo viewer">
+    <figure>
+      <img alt="" />
+      <figcaption></figcaption>
+    </figure>
+    <button class="lb-btn lb-prev" type="button" aria-label="Previous photo">‹</button>
+    <button class="lb-btn lb-next" type="button" aria-label="Next photo">›</button>
+    <button class="lb-btn lb-close" type="button" aria-label="Close">×</button>
+  </dialog>
+
+  <script>
+    (function () {
+      var tiles = Array.prototype.slice.call(document.querySelectorAll('.tile-open'));
+      var box = document.querySelector('.lightbox');
+      if (!tiles.length || !box || !box.showModal) return;
+      var img = box.querySelector('img'), cap = box.querySelector('figcaption'), i = 0;
+
+      function show(n) {
+        i = (n + tiles.length) % tiles.length;
+        var t = tiles[i];
+        img.src = t.dataset.src;
+        img.alt = t.dataset.caption || '';
+        cap.textContent = [t.dataset.caption, t.dataset.date].filter(Boolean).join(' — ');
+        cap.hidden = !cap.textContent;
+      }
+      tiles.forEach(function (t, n) {
+        t.addEventListener('click', function () { show(n); box.showModal(); });
+      });
+      box.querySelector('.lb-prev').onclick = function () { show(i - 1); };
+      box.querySelector('.lb-next').onclick = function () { show(i + 1); };
+      box.querySelector('.lb-close').onclick = function () { box.close(); };
+      box.addEventListener('click', function (e) { if (e.target === box) box.close(); });
+      box.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') show(i - 1);
+        if (e.key === 'ArrowRight') show(i + 1);
+      });
+      if (tiles.length < 2) box.querySelectorAll('.lb-prev, .lb-next').forEach(function (b) { b.hidden = true; });
+    })();
+  </script>
+</body>
+</html>

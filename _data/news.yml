@@ -1,15 +1,13 @@
-# ──────────────────────────────────────────────────────────────
-#  NEWS. Newest first: add new items at the TOP.
-#
-#  - date: "Mon YYYY"
-#    text: "What happened. Markdown links work: [Wang Lab](https://...)"
-# ──────────────────────────────────────────────────────────────
+# NEWS. Newest first.
+# Easiest to edit at https://baraona.org/admin
+# To edit by hand: copy an entry, paste it right under "items:", keep the indentation.
 
-- date: "2025"
-  text: "Started as a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home) at UT Austin, working on personalized speech recognition for disordered speech."
+items:
+  - date: "2025"
+    text: "Started as a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home) at UT Austin, working on personalized speech recognition for disordered speech."
 
-- date: "2025"
-  text: "Presented VitalLink at Northeastern's 41st ECE Capstone Design Competition."
+  - date: "2025"
+    text: "Presented VitalLink at Northeastern's 41st ECE Capstone Design Competition."
 
-- date: "2023"
-  text: "Joined the Action Lab at Northeastern through the UPLIFT Program to work on human-robot collaboration research."
+  - date: "2023"
+    text: "Joined the Action Lab at Northeastern through the UPLIFT Program to work on human-robot collaboration research."

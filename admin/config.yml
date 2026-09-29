@@ -1,0 +1,267 @@
+# Editor for baraona.org, powered by Sveltia CMS.
+# Every save becomes a commit to the repo, and GitHub Pages rebuilds the site.
+
+backend:
+  name: github
+  repo: baraona/baraona.github.io
+  branch: master
+site_url: https://baraona.org
+display_url: https://baraona.org
+media_folder: assets/images
+public_folder: /assets/images
+collections:
+- name: content
+  label: Site content
+  editor:
+    preview: false
+  files:
+  - name: profile
+    label: Profile and about
+    file: _data/profile.yml
+    fields:
+    - label: Name
+      name: name
+      widget: string
+    - label: Tagline
+      name: tagline
+      widget: text
+    - label: Status line
+      name: status
+      widget: string
+      required: false
+      hint: Shown in italics under your tagline. Leave empty to hide.
+    - label: Location
+      name: location
+      widget: string
+    - label: Photo
+      name: photo
+      widget: image
+    - label: CV (PDF)
+      name: cv
+      widget: file
+      media_folder: /assets/docs
+      public_folder: /assets/docs
+    - label: About
+      name: about
+      widget: markdown
+      buttons:
+      - bold
+      - italic
+      - link
+      editor_components: []
+    - label: Search description
+      name: description
+      widget: text
+      hint: Shown by Google and link previews
+    - label: Contact links
+      name: links
+      widget: list
+      summary: '{{fields.label}}'
+      fields:
+      - label: Label
+        name: label
+        widget: string
+      - label: URL
+        name: url
+        widget: string
+        hint: For email use mailto:you@example.com
+  - name: news
+    label: News
+    file: _data/news.yml
+    fields:
+    - label: Items
+      name: items
+      widget: list
+      add_to_top: true
+      summary: '{{fields.date}}: {{fields.text}}'
+      hint: Newest first. Drag to reorder.
+      fields:
+      - label: Date
+        name: date
+        widget: string
+        hint: e.g. Sep 2026
+      - label: Text
+        name: text
+        widget: string
+        hint: 'Markdown links work: [Wang Lab](https://...)'
+  - name: research
+    label: Research
+    file: _data/research.yml
+    fields:
+    - label: Items
+      name: items
+      widget: list
+      add_to_top: true
+      summary: '{{fields.title}}'
+      hint: Newest first. Drag to reorder.
+      fields:
+      - label: Title
+        name: title
+        widget: string
+      - label: Where
+        name: where
+        widget: string
+        required: false
+        hint: Lab, company, course, or 'Personal project'
+      - label: Dates
+        name: dates
+        widget: string
+        required: false
+        hint: e.g. 2026 or 2025 – present
+      - label: Description
+        name: description
+        widget: markdown
+        required: false
+        buttons:
+        - bold
+        - italic
+        - link
+        editor_components: []
+      - label: Skills
+        name: skills
+        widget: list
+        required: false
+        hint: Comma-separated, e.g. PCB design, Firmware, Python
+      - label: Image
+        name: image
+        widget: image
+        required: false
+      - label: Image description
+        name: image_alt
+        widget: string
+        required: false
+        hint: What the photo shows, for screen readers
+      - label: Links
+        name: links
+        widget: list
+        required: false
+        summary: '{{fields.label}}'
+        fields:
+        - label: Label
+          name: label
+          widget: string
+          hint: e.g. Code, Paper, Report, Demo
+        - label: URL
+          name: url
+          widget: string
+          hint: A web address, or a path to an uploaded file like /assets/docs/report.pdf
+  - name: projects
+    label: Projects
+    file: _data/projects.yml
+    fields:
+    - label: Items
+      name: items
+      widget: list
+      add_to_top: true
+      summary: '{{fields.title}}'
+      hint: Newest first. Drag to reorder.
+      fields:
+      - label: Title
+        name: title
+        widget: string
+      - label: Where
+        name: where
+        widget: string
+        required: false
+        hint: Lab, company, course, or 'Personal project'
+      - label: Dates
+        name: dates
+        widget: string
+        required: false
+        hint: e.g. 2026 or 2025 – present
+      - label: Description
+        name: description
+        widget: markdown
+        required: false
+        buttons:
+        - bold
+        - italic
+        - link
+        editor_components: []
+      - label: Skills
+        name: skills
+        widget: list
+        required: false
+        hint: Comma-separated, e.g. PCB design, Firmware, Python
+      - label: Image
+        name: image
+        widget: image
+        required: false
+      - label: Image description
+        name: image_alt
+        widget: string
+        required: false
+        hint: What the photo shows, for screen readers
+      - label: Links
+        name: links
+        widget: list
+        required: false
+        summary: '{{fields.label}}'
+        fields:
+        - label: Label
+          name: label
+          widget: string
+          hint: e.g. Code, Paper, Report, Demo
+        - label: URL
+          name: url
+          widget: string
+          hint: A web address, or a path to an uploaded file like /assets/docs/report.pdf
+  - name: awards
+    label: Honors and awards
+    file: _data/awards.yml
+    fields:
+    - label: Items
+      name: items
+      widget: list
+      add_to_top: true
+      summary: '{{fields.name}}'
+      hint: Most important first. Drag to reorder.
+      fields:
+      - label: Name
+        name: name
+        widget: string
+      - label: Detail
+        name: detail
+        widget: string
+        required: false
+        hint: e.g. $2,000
+      - label: Year
+        name: year
+        widget: string
+        required: false
+  - name: gallery
+    label: Life gallery
+    file: _data/gallery.yml
+    fields:
+    - label: Intro
+      name: intro
+      widget: string
+      required: false
+      hint: One line shown under the page title
+    - label: Items
+      name: items
+      widget: list
+      add_to_top: true
+      summary: '{{fields.caption}}'
+      hint: Newest first. Drag to reorder. Remove an item here to take it off the site.
+      fields:
+      - label: Photo, video, or file
+        name: file
+        widget: file
+        media_folder: /assets/life
+        public_folder: /assets/life
+        hint: 'Photos: JPG, PNG or WebP. Videos: MP4, ideally under 50 MB.'
+      - label: Caption
+        name: caption
+        widget: text
+        required: false
+      - label: Date
+        name: date
+        widget: string
+        required: false
+        hint: e.g. Summer 2006 or Mar 2026
+      - label: Image description
+        name: alt
+        widget: string
+        required: false
+        hint: What the photo shows, for screen readers. Defaults to the caption.

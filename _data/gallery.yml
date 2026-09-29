@@ -1,0 +1,12 @@
+# LIFE GALLERY. Newest first.
+# Easiest to edit at https://baraona.org/admin
+# "file" can be a photo (jpg, png, webp, gif), a video (mp4, webm), or any other file (pdf, etc).
+#
+# Example entry (goes under items, indented two spaces, and remove the [] ):
+#   - file: /assets/life/sienna.jpg
+#     caption: "Sienna's first day home."
+#     date: "2024"
+
+intro: "Outside the lab: family, Sienna, and the moments in between."
+
+items: []

@@ -1,43 +1,32 @@
-# ──────────────────────────────────────────────────────────────
-#  PROJECTS. Newest first: add new entries at the TOP.
-#  Same format as research.yml. Only "title" is required.
-#
-#  - title: "Project name"
-#    where: "Course, company, or Personal project"
-#    dates: "2026"
-#    description: >-
-#      What it does and what you built.
-#    skills: [PCB design, Firmware]
-#    image: assets/images/file.jpg
-#    links:
-#      - label: Code
-#        url: https://github.com/baraona/repo
-# ──────────────────────────────────────────────────────────────
+# PROJECTS. Newest first. Only "title" is required.
+# Easiest to edit at https://baraona.org/admin
+# To edit by hand: copy an entry, paste it right under "items:", keep the indentation.
 
-- title: "VitalLink: Wearable Triage System"
-  where: "Capstone, Northeastern University"
-  dates: "2025"
-  description: >-
-    A BLE wristband and base station that continuously monitor heart rate,
-    SpO2, temperature, and motion for patients in hospital waiting rooms, and
-    generate real-time severity scores so clinicians can prioritize care.
-    I designed the custom PCB and firmware and built the clinical dashboard.
-  skills: [PCB design, Embedded firmware, Bluetooth Low Energy, Web dashboard]
-  image: assets/images/vitallink.jfif
-  image_alt: "The VitalLink team presenting at Northeastern's ECE Capstone Design Competition"
-  links:
-    - label: Report
-      url: assets/docs/VitalLinkReport.pdf
-    - label: Poster
-      url: assets/docs/VitalLinkPoster.pdf
+items:
+  - title: "VitalLink: Wearable Triage System"
+    where: "Capstone, Northeastern University"
+    dates: "2025"
+    description: >-
+      A BLE wristband and base station that continuously monitor heart rate,
+      SpO2, temperature, and motion for patients in hospital waiting rooms, and
+      generate real-time severity scores so clinicians can prioritize care.
+      I designed the custom PCB and firmware and built the clinical dashboard.
+    skills: [PCB design, Embedded firmware, Bluetooth Low Energy, Web dashboard]
+    image: assets/images/vitallink.jfif
+    image_alt: "The VitalLink team presenting at Northeastern's ECE Capstone Design Competition"
+    links:
+      - label: Report
+        url: assets/docs/VitalLinkReport.pdf
+      - label: Poster
+        url: assets/docs/VitalLinkPoster.pdf
 
-- title: "CaptionXR: Real-Time XR Captioning"
-  where: "Personal project"
-  description: >-
-    A Unity overlay that renders live speech captions inside an extended
-    reality environment, pairing speech recognition with spatial UI for
-    accessibility.
-  skills: [Unity, C#, Speech recognition, XR]
-  # links:
-  #   - label: Code
-  #     url: https://github.com/baraona/REPO-NAME
+  - title: "CaptionXR: Real-Time XR Captioning"
+    where: "Personal project"
+    description: >-
+      A Unity overlay that renders live speech captions inside an extended
+      reality environment, pairing speech recognition with spatial UI for
+      accessibility.
+    skills: [Unity, C#, Speech recognition, XR]
+    # links:
+    #   - label: Code
+    #     url: https://github.com/baraona/REPO-NAME
