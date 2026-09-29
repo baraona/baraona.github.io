@@ -1,0 +1,15 @@
+# ──────────────────────────────────────────────────────────────
+#  NEWS. Newest first: add new items at the TOP.
+#
+#  - date: "Mon YYYY"
+#    text: "What happened. Markdown links work: [Wang Lab](https://...)"
+# ──────────────────────────────────────────────────────────────
+
+- date: "2025"
+  text: "Started as a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home) at UT Austin, working on personalized speech recognition for disordered speech."
+
+- date: "2025"
+  text: "Presented VitalLink at Northeastern's 41st ECE Capstone Design Competition."
+
+- date: "2023"
+  text: "Joined the Action Lab at Northeastern through the UPLIFT Program to work on human-robot collaboration research."

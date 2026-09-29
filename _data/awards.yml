@@ -1,0 +1,23 @@
+# ──────────────────────────────────────────────────────────────
+#  HONORS & AWARDS. Most important or most recent first.
+#
+#  - name: "Award name"
+#    detail: "$2,000"     # optional
+#    year: "2024"         # optional
+# ──────────────────────────────────────────────────────────────
+
+- name: "Northeastern National Recognition Program Scholarship"
+  detail: "$40,000"
+
+- name: "National Merit Scholar"
+  year: "2023"
+
+- name: "National HSF Scholar"
+  year: "2023"
+
+- name: "National Grid CECA Scholarship"
+  detail: "$2,000"
+
+- name: "NUAccelerate Scholarship"
+
+- name: "UPLIFT Program Scholar"

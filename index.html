@@ -1,0 +1,145 @@
+---
+# This page is built automatically from _config.yml and the files in _data/.
+# You shouldn't need to edit it to add news, research, projects, or awards.
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ site.title }}</title>
+  <meta name="description" content="{{ site.description | strip }}" />
+  <meta property="og:title" content="{{ site.title }}" />
+  <meta property="og:description" content="{{ site.description | strip }}" />
+  <meta property="og:url" content="{{ site.url }}" />
+  <meta property="og:image" content="{{ site.url }}/{{ site.photo }}" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="canonical" href="{{ site.url }}" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/site.css" />
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+
+  <header class="bar">
+    <nav class="bar-inner" aria-label="Sections">
+      <a class="bar-name" href="#top">{{ site.name }}</a>
+      <ul class="bar-links">
+        <li><a href="#about">About</a></li>
+        {%- if site.data.news.size > 0 %}<li><a href="#news">News</a></li>{% endif %}
+        {%- if site.data.research.size > 0 %}<li><a href="#research">Research</a></li>{% endif %}
+        {%- if site.data.projects.size > 0 %}<li><a href="#projects">Projects</a></li>{% endif %}
+        {%- if site.data.awards.size > 0 %}<li><a href="#awards">Awards</a></li>{% endif %}
+        {%- if site.cv %}<li><a class="bar-cv" href="{{ site.cv }}" target="_blank" rel="noopener">CV</a></li>{% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <main class="page" id="top">
+    <section class="intro" aria-label="Introduction">
+      {%- if site.photo %}
+      <div class="portrait"><img src="{{ site.photo }}" alt="Portrait of {{ site.name }}" /></div>
+      {%- endif %}
+      <div class="intro-text">
+        <h1>{{ site.name }}</h1>
+        <p class="tagline">{{ site.tagline }}</p>
+        {%- if site.status %}
+        <p class="status">{{ site.status }}</p>
+        {%- endif %}
+        <ul class="contact">
+          {%- for link in site.links %}
+          <li><a href="{{ link.url }}"{% unless link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %}>{{ link.label }}</a></li>
+          {%- endfor %}
+          {%- if site.cv %}<li><a href="{{ site.cv }}" target="_blank" rel="noopener">CV (PDF)</a></li>{% endif %}
+        </ul>
+      </div>
+    </section>
+
+    <div id="content">
+      <section class="block" id="about">
+        <h2>About</h2>
+        <div class="prose">
+          {%- capture about %}{% include about.md %}{% endcapture %}
+          {{ about | markdownify }}
+        </div>
+      </section>
+
+      {%- if site.data.news.size > 0 %}
+      <section class="block" id="news">
+        <h2>News</h2>
+        <ul class="news">
+          {%- for item in site.data.news %}
+          <li>
+            <span class="news-date">{{ item.date }}</span>
+            <span class="news-text">{{ item.text | markdownify | remove: '<p>' | remove: '</p>' | strip }}</span>
+          </li>
+          {%- endfor %}
+        </ul>
+      </section>
+      {%- endif %}
+
+      {%- if site.data.research.size > 0 %}
+      <section class="block" id="research">
+        <h2>Research</h2>
+        {%- for item in site.data.research %}
+          {% include entry.html item=item %}
+        {%- endfor %}
+      </section>
+      {%- endif %}
+
+      {%- if site.data.projects.size > 0 %}
+      <section class="block" id="projects">
+        <h2>Projects</h2>
+        {%- for item in site.data.projects %}
+          {% include entry.html item=item %}
+        {%- endfor %}
+      </section>
+      {%- endif %}
+
+      {%- if site.data.awards.size > 0 %}
+      <section class="block" id="awards">
+        <h2>Honors and awards</h2>
+        <ul class="awards">
+          {%- for a in site.data.awards %}
+          <li>
+            <span class="award-name">{{ a.name }}{% if a.detail %}<span class="award-detail">, {{ a.detail }}</span>{% endif %}</span>
+            {%- if a.year %}<span class="award-year">{{ a.year }}</span>{% endif %}
+          </li>
+          {%- endfor %}
+        </ul>
+      </section>
+      {%- endif %}
+    </div>
+  </main>
+
+  <footer class="foot">
+    <p>{{ site.name }}, {{ site.location }}. Updated {{ site.time | date: "%B %Y" }}.</p>
+    <p><a href="#top">Back to top</a></p>
+  </footer>
+
+  <script>
+    // Underline the nav link for the section on screen.
+    (function () {
+      var links = document.querySelectorAll('.bar-links a[href^="#"]');
+      if (!('IntersectionObserver' in window) || !links.length) return;
+      var byId = {};
+      links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          links.forEach(function (l) { l.removeAttribute('aria-current'); });
+          var a = byId[e.target.id];
+          if (a) a.setAttribute('aria-current', 'true');
+        });
+      }, { rootMargin: '-40% 0px -55% 0px' });
+      Object.keys(byId).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) obs.observe(el);
+      });
+    })();
+  </script>
+</body>
+</html>

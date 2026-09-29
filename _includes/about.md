@@ -1,0 +1,3 @@
+I'm a graduate student in Electrical and Computer Engineering at the University of Texas at Austin and a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home). My research focuses on personalized automatic speech recognition for people with disordered speech, including stuttering, dysarthria, and apraxia, using adaptive pipelines that improve over time for each user.
+
+My undergraduate training at Northeastern was rooted in hardware: PCB design, embedded systems, and hands-on lab work. My graduate research builds on that foundation with software and machine learning, and I'm most at home where the two meet, building biomedical devices and tools that improve people's lives.
