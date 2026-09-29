@@ -1,0 +1,60 @@
+{%- comment -%}
+  One thing on the Life page: a photo, video, or file, or a folder that holds more of them
+  (folders can hold folders). An item without a "file" is a folder.
+  include.key is its place in _data (gallery.items.0), include.path is the folder path it's in.
+  Includes share variables with the page, and this file includes itself, so it only uses
+  include.* and names starting with gallery_, and uses each one right after setting it.
+{%- endcomment -%}
+{%- if include.item.file or include.as == 'file' -%}
+{%- assign gallery_ext = include.item.file | split: '.' | last | downcase -%}
+{%- assign gallery_kind = 'file' -%}
+{%- if gallery_ext == 'jpg' or gallery_ext == 'jpeg' or gallery_ext == 'png' or gallery_ext == 'webp' or gallery_ext == 'gif' or gallery_ext == 'avif' or gallery_ext == 'jfif' %}{% assign gallery_kind = 'image' %}{% endif -%}
+{%- if gallery_ext == 'mp4' or gallery_ext == 'webm' or gallery_ext == 'm4v' or gallery_ext == 'mov' %}{% assign gallery_kind = 'video' %}{% endif -%}
+<li class="tile tile--{{ gallery_kind }}" data-edit-item="{{ include.key }}">
+  <div class="tile-media" data-edit-file="{{ include.key }}.file" data-accept="image/*,video/*,application/pdf" data-folder="assets/life">
+    {%- if gallery_kind == 'image' %}
+    <button class="tile-open" type="button" data-src="{{ include.item.file }}" data-caption="{{ include.item.caption | escape }}" data-date="{{ include.item.date | escape }}" aria-label="Open photo{% if include.item.caption %}: {{ include.item.caption | escape }}{% endif %}">
+      <img src="{{ include.item.file }}" alt="{{ include.item.alt | default: include.item.caption | escape }}" loading="lazy" />
+    </button>
+    {%- elsif gallery_kind == 'video' %}
+    <video src="{{ include.item.file }}" controls preload="metadata" playsinline{% if include.item.poster %} poster="{{ include.item.poster }}"{% endif %}></video>
+    {%- elsif include.item.file %}
+    <a class="tile-file" href="{{ include.item.file }}" target="_blank" rel="noopener">
+      <span class="tile-file-ext">{{ gallery_ext | upcase }}</span>
+      <span class="tile-file-name">{{ include.item.file | split: '/' | last }}</span>
+    </a>
+    {%- endif %}
+  </div>
+  <p class="tile-caption"><span data-edit="{{ include.key }}.caption" data-placeholder="Caption">{{ include.item.caption }}</span><span class="tile-date" data-edit="{{ include.key }}.date" data-placeholder="Date">{{ include.item.date }}</span></p>
+</li>
+{%- else -%}
+{%- capture gallery_path %}{% if include.path and include.path != '' %}{{ include.path }}/{% endif %}{{ include.item.title | slugify }}{% endcapture -%}
+<li class="tile tile--folder" data-edit-item="{{ include.key }}" data-path="{{ gallery_path }}">
+  {%- assign gallery_cover = include.item.cover -%}
+  {%- unless gallery_cover -%}
+    {%- for gallery_child in include.item.items -%}
+      {%- assign gallery_ext = gallery_child.file | split: '.' | last | downcase -%}
+      {%- if gallery_ext == 'jpg' or gallery_ext == 'jpeg' or gallery_ext == 'png' or gallery_ext == 'webp' or gallery_ext == 'gif' or gallery_ext == 'avif' or gallery_ext == 'jfif' %}{% assign gallery_cover = gallery_child.file %}{% break %}{% endif -%}
+    {%- endfor -%}
+  {%- endunless %}
+  <a class="folder-open" href="#{{ gallery_path }}" data-nav aria-label="Open folder {{ include.item.title | escape }}">
+    <span class="folder-cover">{% if gallery_cover %}<img src="{{ gallery_cover }}" alt="" loading="lazy" />{% endif %}</span>
+  </a>
+  {%- assign gallery_count = include.item.items.size | default: 0 %}
+  <p class="folder-name"><span data-edit="{{ include.key }}.title" data-placeholder="Folder name">{{ include.item.title }}</span><span class="folder-count">{{ gallery_count }} {% if gallery_count == 1 %}item{% else %}items{% endif %}</span></p>
+  <div class="folder-view">
+    <div class="folder-head">
+      <a class="folder-back" href="#{{ include.path }}" data-nav>← Back</a>
+      <h2 data-edit="{{ include.key }}.title" data-placeholder="Folder name">{{ include.item.title }}</h2>
+    </div>
+    <ul class="gallery" data-edit-list="{{ include.key }}.items" data-edit-kind="gallery" data-add="start" data-item-name="item">
+      {%- for gallery_child in include.item.items %}
+      {%- capture gallery_child_key %}{{ include.key }}.items.{{ forloop.index0 }}{% endcapture %}
+      {%- capture gallery_child_path %}{% if include.path and include.path != '' %}{{ include.path }}/{% endif %}{{ include.item.title | slugify }}{% endcapture %}
+      {% include gallery-item.html item=gallery_child key=gallery_child_key path=gallery_child_path %}
+      {%- endfor %}
+    </ul>
+    {%- if gallery_count == 0 %}<p class="empty">This folder is empty.</p>{% endif %}
+  </div>
+</li>
+{%- endif -%}

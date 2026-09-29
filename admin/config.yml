@@ -341,12 +341,18 @@ collections:
       name: items
       widget: list
       add_to_top: true
-      summary: '{{fields.caption}}'
-      hint: Newest first. Drag to reorder. Remove an item here to take it off the site.
+      summary: '{{fields.title}}{{fields.caption}}'
+      hint: Photos, videos, files, and folders. Newest first. Drag to reorder.
       fields:
+      - label: Folder name
+        name: title
+        widget: string
+        required: false
+        hint: Fill this in (and leave the file empty) to make this a folder.
       - label: Photo, video, or file
         name: file
         widget: file
+        required: false
         media_folder: /assets/life
         public_folder: /assets/life
         hint: 'Photos: JPG, PNG or WebP. Videos: MP4, ideally under 50 MB.'
@@ -364,3 +370,69 @@ collections:
         widget: string
         required: false
         hint: What the photo shows, for screen readers. Defaults to the caption.
+      - label: In this folder
+        name: items
+        widget: list
+        required: false
+        summary: '{{fields.title}}{{fields.caption}}'
+        hint: Only for folders.
+        fields:
+          - label: Folder name
+            name: title
+            widget: string
+            required: false
+            hint: Fill this in (and leave the file empty) to make this a folder.
+          - label: Photo, video, or file
+            name: file
+            widget: file
+            required: false
+            media_folder: /assets/life
+            public_folder: /assets/life
+            hint: 'Photos: JPG, PNG or WebP. Videos: MP4, ideally under 50 MB.'
+          - label: Caption
+            name: caption
+            widget: text
+            required: false
+          - label: Date
+            name: date
+            widget: string
+            required: false
+            hint: e.g. Summer 2006 or Mar 2026
+          - label: Image description
+            name: alt
+            widget: string
+            required: false
+            hint: What the photo shows, for screen readers. Defaults to the caption.
+          - label: In this folder
+            name: items
+            widget: list
+            required: false
+            summary: '{{fields.title}}{{fields.caption}}'
+            hint: Only for folders. Folders more than three levels deep can be edited on the page.
+            fields:
+              - label: Folder name
+                name: title
+                widget: string
+                required: false
+                hint: Fill this in (and leave the file empty) to make this a folder.
+              - label: Photo, video, or file
+                name: file
+                widget: file
+                required: false
+                media_folder: /assets/life
+                public_folder: /assets/life
+                hint: 'Photos: JPG, PNG or WebP. Videos: MP4, ideally under 50 MB.'
+              - label: Caption
+                name: caption
+                widget: text
+                required: false
+              - label: Date
+                name: date
+                widget: string
+                required: false
+                hint: e.g. Summer 2006 or Mar 2026
+              - label: Image description
+                name: alt
+                widget: string
+                required: false
+                hint: What the photo shows, for screen readers. Defaults to the caption.

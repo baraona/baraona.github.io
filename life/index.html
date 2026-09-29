@@ -14,15 +14,7 @@ title: Life
 <body class="wide">
   <a class="skip" href="#content">Skip to content</a>
 
-  <header class="bar">
-    <nav class="bar-inner" aria-label="Site">
-      <a class="bar-name" href="/" data-edit="profile.site_name">{{ me.site_name }}</a>
-      <ul class="bar-links">
-        <li><a href="/">Work</a></li>
-        <li><a href="/life/" aria-current="page">Life</a></li>
-      </ul>
-    </nav>
-  </header>
+  {% include bar.html home="/" page="life" %}
 
   <main class="page page--wide" id="content">
     <header class="life-head">
@@ -30,11 +22,12 @@ title: Life
       <p class="tagline" data-edit="gallery.intro" data-placeholder="One line under the title">{{ g.intro }}</p>
     </header>
 
-    <ul class="gallery" data-edit-list="gallery.items" data-add="start" data-add-label="Add photo or video" data-add-file data-item-name="photo">
-      <template data-edit-template>{% include tile.html key="__KEY__" %}</template>
+    <ul class="gallery" data-edit-list="gallery.items" data-edit-kind="gallery" data-add="start" data-item-name="item">
+      <template data-edit-template data-kind="gallery" data-label="Add folder">{% include gallery-item.html key="__KEY__" as="folder" %}</template>
+      <template data-edit-template data-kind="gallery" data-label="Add photo or video" data-needs-file>{% include gallery-item.html key="__KEY__" as="file" %}</template>
       {%- for item in g.items %}
       {%- capture k %}gallery.items.{{ forloop.index0 }}{% endcapture %}
-      {% include tile.html item=item key=k %}
+      {% include gallery-item.html item=item key=k path="" %}
       {%- endfor %}
     </ul>
     {%- if g.items.size == 0 %}
@@ -42,10 +35,7 @@ title: Life
     {%- endif %}
   </main>
 
-  <footer class="foot">
-    <p>{{ me.name }}, {{ me.location }}.</p>
-    <p><a href="/">Back to work</a><a class="foot-edit" href="?edit">Edit</a></p>
-  </footer>
+  {% include footer.html back_url="/" back_label="Back to work" %}
 
   <dialog class="lightbox" aria-label="Photo viewer">
     <figure>
@@ -58,11 +48,47 @@ title: Life
   </dialog>
 
   <script>
+    // Folders: the page holds every folder's contents; opening one hides everything
+    // else. The address (#sienna/beach) says which folder is open, so it can be shared.
     (function () {
-      var tiles = Array.prototype.slice.call(document.querySelectorAll('.tile-open'));
+      var root = document.querySelector('.gallery');
+      if (!root) return;
+
+      function open(folder) {
+        document.querySelectorAll('.is-open, .has-open').forEach(function (el) {
+          el.classList.remove('is-open', 'has-open');
+        });
+        for (var f = folder; f; f = f.parentElement.closest('.tile--folder')) {
+          f.classList.add('is-open');
+          f.parentElement.classList.add('has-open');
+        }
+        document.body.classList.toggle('in-folder', Boolean(folder));
+      }
+      function openPath(path) {
+        var match = path && root.querySelector('.tile--folder[data-path="' + CSS.escape(path) + '"]');
+        open(match || null);
+      }
+      document.addEventListener('click', function (e) {
+        var link = e.target.closest('[data-nav]');
+        if (!link) return;
+        e.preventDefault();
+        var here = link.closest('.tile--folder');
+        var folder = link.classList.contains('folder-back') ? here.parentElement.closest('.tile--folder') : here;
+        open(folder);
+        history.pushState(null, '', folder && folder.dataset.path ? '#' + folder.dataset.path : location.pathname);
+        window.scrollTo(0, 0);
+      });
+      function fromAddress() { openPath(decodeURIComponent(location.hash.slice(1))); }
+      window.addEventListener('popstate', fromAddress);
+      window.addEventListener('hashchange', fromAddress);
+      fromAddress();
+    })();
+
+    // Lightbox: steps through the photos in the folder you're looking at.
+    (function () {
       var box = document.querySelector('.lightbox');
-      if (!tiles.length || !box || !box.showModal) return;
-      var img = box.querySelector('img'), cap = box.querySelector('figcaption'), i = 0;
+      if (!box || !box.showModal) return;
+      var img = box.querySelector('img'), cap = box.querySelector('figcaption'), tiles = [], i = 0;
 
       function show(n) {
         i = (n + tiles.length) % tiles.length;
@@ -72,8 +98,13 @@ title: Life
         cap.textContent = [t.dataset.caption, t.dataset.date].filter(Boolean).join(' — ');
         cap.hidden = !cap.textContent;
       }
-      tiles.forEach(function (t, n) {
-        t.addEventListener('click', function () { show(n); box.showModal(); });
+      document.addEventListener('click', function (e) {
+        var t = e.target.closest('.tile-open');
+        if (!t || document.documentElement.classList.contains('is-editing')) return;
+        tiles = Array.prototype.slice.call(t.closest('.gallery').querySelectorAll(':scope > .tile > .tile-media > .tile-open'));
+        box.querySelectorAll('.lb-prev, .lb-next').forEach(function (b) { b.hidden = tiles.length < 2; });
+        show(tiles.indexOf(t));
+        box.showModal();
       });
       box.querySelector('.lb-prev').onclick = function () { show(i - 1); };
       box.querySelector('.lb-next').onclick = function () { show(i + 1); };
@@ -83,7 +114,6 @@ title: Life
         if (e.key === 'ArrowLeft') show(i - 1);
         if (e.key === 'ArrowRight') show(i + 1);
       });
-      if (tiles.length < 2) box.querySelectorAll('.lb-prev, .lb-next').forEach(function (b) { b.hidden = true; });
     })();
   </script>
 </body>

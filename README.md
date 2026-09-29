@@ -13,9 +13,14 @@ page, or use the full editor at **https://baraona.org/admin**.
    gets a dotted outline, and empty optional fields show a grey placeholder.
    - **Text:** click and type. Paragraphs like About open in a text box where
      `[text](https://link)`, `**bold**`, and `*italic*` work.
-   - **Add and remove:** every list has a **+ Add** button (news, research,
-     projects, awards, award groups, links, Life photos), and every item has a
-     **Remove** button. Entries also have **Add image** / **Remove image**.
+   - **Add, move, and remove:** every list has a **+ Add** button (news,
+     research, projects, awards, award groups, links, Life photos and folders).
+     Point at an item and its tools appear in the left margin: drag the dotted
+     handle to move it (or focus it and use the arrow keys), and × removes it.
+     Entries also have add/remove image. Items can be dragged between lists of
+     the same kind: awards between groups, entries between Research and
+     Projects, and photos onto a folder to put them in it. Links have ← and →
+     in their address box.
    - **Links:** click a link's text to edit it; a box underneath edits its
      address, uploads a file for it (like a PDF), or removes it.
    - **Files:** click my photo, the CV link, a project image, or a Life photo
@@ -72,8 +77,10 @@ GitHub and make a new one.
 
 ## Life gallery
 
-In the editor, open **Life gallery**, click **Add**, upload a photo, video, or
-file, and write a caption and date. Uploads are stored in `assets/life/`.
+On the Life page, sign in and click **Edit page**, then **+ Add folder** or
+**+ Add photo or video**. Folders open in place (their address, like
+baraona.org/life/#sienna, can be shared) and can hold more folders. Uploads are
+stored in `assets/life/`. /admin shows folders up to three levels deep.
 
 - Photos: JPG, PNG, or WebP. iPhone HEIC photos don't display in most browsers,
   so export them as JPEG first (on iPhone: Settings → Camera → Formats →

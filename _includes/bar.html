@@ -1,0 +1,13 @@
+{%- comment -%} Top bar. include.home is where the site name links (default /), include.page marks the current page. {%- endcomment -%}
+<header class="bar">
+  <nav class="bar-inner" aria-label="Site">
+    <a class="bar-name" href="{{ include.home | default: '/' }}" data-edit="profile.site_name" data-placeholder="Site name">{{ site.data.profile.site_name }}</a>
+    <ul class="bar-links">
+      <li><a href="/#about">About</a></li>
+      <li><a href="/life/"{% if include.page == 'life' %} aria-current="page"{% endif %}>Life</a></li>
+      {%- if site.data.profile.cv %}
+      <li><a class="bar-cv" href="/{{ site.data.profile.cv | remove_first: '/' }}" target="_blank" rel="noopener" data-edit-file="profile.cv" data-accept="application/pdf,.pdf" data-folder="assets/docs">CV</a></li>
+      {%- endif %}
+    </ul>
+  </nav>
+</header>

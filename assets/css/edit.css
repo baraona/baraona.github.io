@@ -47,58 +47,110 @@
 .edit-status:empty { display: none; }
 .edit-status.is-error { color: var(--e-red); }
 
-/* Editable text on the page */
-.is-editing [data-edit] {
-  outline: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+/* Editable things on the page: quiet until you point at them */
+.is-editing [data-edit],
+.is-editing [data-edit-file] {
+  outline: 1px dashed transparent;
   outline-offset: 3px;
   border-radius: 2px;
-  cursor: text;
+  transition: outline-color 0.12s;
 }
-.is-editing [data-edit]:hover { outline-style: solid; }
+.is-editing [data-edit] { cursor: text; }
+.is-editing [data-edit-file], .is-editing [data-edit-type="markdown"] { cursor: pointer; }
+.is-editing [data-edit]:hover,
+.is-editing [data-edit-file]:hover { outline-color: color-mix(in srgb, var(--accent) 60%, transparent); }
 .is-editing [data-edit]:focus { outline: 2px solid var(--accent); }
-.is-editing [data-edit-type="markdown"] { cursor: pointer; }
 .is-editing [data-edit]:empty::before {
   content: attr(data-placeholder);
   color: var(--text-faint);
   font-style: italic;
 }
-.is-editing [data-edit-file] {
-  outline: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
-  outline-offset: 3px;
-  cursor: pointer;
-}
-.is-editing [data-edit-file]:hover { outline-style: solid; }
 .is-editing .empty { display: none; }
 
-/* Add and remove buttons, placed on the page next to what they change */
+/* Per-item tools (move, image, remove): in the left margin, shown for the item
+   you're pointing at. On narrow screens they sit in the item's top corner. */
 .is-editing [data-edit-item] { position: relative; }
-.edit-control button, button.edit-control {
-  font: 500 12px/1.2 system-ui, -apple-system, 'Segoe UI', sans-serif;
-  padding: 4px 9px;
-  border-radius: 6px;
-  border: 1px solid var(--lines);
-  background: var(--background);
-  color: var(--text-soft);
-  cursor: pointer;
-}
-.edit-control button:hover, button.edit-control:hover { color: var(--text); border-color: var(--text-faint); }
 .edit-item-tools {
   position: absolute;
-  top: -14px;
-  right: 0;
+  top: 0;
+  left: -38px;
   z-index: 5;
   display: flex;
-  gap: 4px;
-  opacity: 0.55;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 8px; /* bridges the gap so the pointer doesn't lose the item */
+  visibility: hidden; /* hidden tools must not catch clicks meant for a neighbor's */
+  opacity: 0;
+  transition: opacity 0.12s, visibility 0.12s;
 }
-[data-edit-item]:hover > .edit-item-tools,
-[data-edit-item]:focus-within > .edit-item-tools { opacity: 1; }
+.edit-item-tools button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.edit-item-tools button:hover, .edit-item-tools button:focus-visible { color: var(--text); background: var(--lines); }
+.edit-item-tools [data-tool="remove"]:hover { color: #d33; }
+.edit-item-tools .edit-handle { cursor: grab; touch-action: none; }
+[data-edit-item]:hover:not(:has([data-edit-item]:hover)) > .edit-item-tools,
+[data-edit-item]:focus-within:not(:has([data-edit-item]:focus-within)) > .edit-item-tools,
+.edit-item-tools:focus-within { visibility: visible; opacity: 1; }
+/* Photo and folder tiles: tools float over the image's corner */
+.tile > .edit-item-tools {
+  top: 6px;
+  left: auto;
+  right: 6px;
+  flex-direction: row;
+  padding: 0;
+}
+.tile > .edit-item-tools button { background: color-mix(in srgb, var(--background) 88%, transparent); }
+@media (max-width: 780px) {
+  .edit-item-tools { top: -6px; left: auto; right: -6px; flex-direction: row; padding: 0; }
+}
+@media (hover: none) {
+  .tile > .edit-item-tools { visibility: visible; opacity: 1; }
+}
+
+/* Add buttons: small and quiet; the ones inside an entry show when you point at it */
+.edit-add-row { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 4px 0 12px; }
 button.edit-add {
   display: block;
-  margin: 10px 0 14px;
-  border-style: dashed;
-  color: var(--accent);
+  margin: 4px 0 12px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font: 500 13px/1.3 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: color-mix(in srgb, var(--accent) 80%, var(--text-faint));
+  cursor: pointer;
 }
+.edit-add-row button.edit-add { margin: 0; }
+button.edit-add:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) {
+  .entry button.edit-add { visibility: hidden; opacity: 0; transition: opacity 0.12s, visibility 0.12s; }
+  .entry:hover button.edit-add, .entry:focus-within button.edit-add { visibility: visible; opacity: 1; }
+}
+/* While a folder is open, the buttons for the list around it would add to the wrong place */
+.edit-add:has(+ .has-open), .edit-add-row:has(+ .has-open) { display: none; }
+
+/* Dragging */
+.is-dragging { opacity: 0.35; }
+.edit-drop-marker {
+  position: absolute;
+  z-index: 120;
+  pointer-events: none;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.is-drop-target .folder-cover { outline: 2px solid var(--accent); outline-offset: 2px; }
+.edit-moved { animation: edit-moved 0.6s ease-out; }
+@keyframes edit-moved { from { background: color-mix(in srgb, var(--accent) 14%, transparent); } }
+
 .edit-md-box { flex: 1 1 100%; }
 
 .edit-md {

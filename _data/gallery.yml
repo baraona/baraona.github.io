@@ -1,11 +1,15 @@
 # LIFE GALLERY. Newest first.
-# Easiest to edit at https://baraona.org/admin
-# "file" can be a photo (jpg, png, webp, gif), a video (mp4, webm), or any other file (pdf, etc).
+# Easiest to edit on the page (sign in, then Edit page) or at https://baraona.org/admin
+# Each item is a photo (jpg, png, webp, gif), a video (mp4, webm), any other file (pdf, etc),
+# or a folder: an item with a "title" and its own "items" instead of a "file".
+# Folders can hold folders.
 #
-# Example entry (goes under items, indented two spaces, and remove the [] ):
-#   - file: /assets/life/sienna.jpg
-#     caption: "Sienna's first day home."
-#     date: "2024"
+# Example (goes under items, indented two spaces, and remove the [] ):
+#   - title: "Sienna"
+#     items:
+#       - file: /assets/life/sienna.jpg
+#         caption: "Sienna's first day home."
+#         date: "2024"
 
 intro: "pictures and videos that mean a lot"
 

@@ -4,3 +4,4 @@ title: Alejandro Baraona
 url: https://baraona.org
 exclude:
   - README.md
+timezone: UTC # the "Updated" time in the footer

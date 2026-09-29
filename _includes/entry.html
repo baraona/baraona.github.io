@@ -11,7 +11,7 @@
     </p>
     <div class="entry-desc" data-edit="{{ include.key }}.description" data-edit-type="markdown" data-placeholder="Description">{% if include.item.description %}{{ include.item.description | markdownify }}{% endif %}</div>
     <p class="entry-skills" data-edit="{{ include.key }}.skills" data-edit-type="list" data-placeholder="Skills, separated by commas">{{ include.item.skills | join: ", " }}</p>
-    <p class="entry-links" data-edit-list="{{ include.key }}.links" data-add="end" data-add-label="Add link">
+    <p class="entry-links" data-edit-list="{{ include.key }}.links" data-edit-kind="entry-link" data-add="end" data-add-label="Add link">
       <template data-edit-template>{% include link.html key="__KEY__" %}</template>
       {%- for entry_link in include.item.links %}
       {%- capture entry_link_key %}{{ include.key }}.links.{{ forloop.index0 }}{% endcapture %}

@@ -10,8 +10,11 @@
 //                           opens a text box, "list" is comma-separated)
 //   data-edit-url="path"    a link's address, edited in a small popover
 //   data-edit-file="path"   a photo or file you can click to replace
-//   data-edit-list="path"   a list you can add to; its <template> is a blank item
-//   data-edit-item="path"   one item in a list, which you can remove
+//   data-edit-list="path"   a list you can add to and rearrange. data-edit-kind
+//                           says which lists items can be dragged between, and
+//                           <template data-edit-template> holds a blank item
+//                           (lists without one borrow a template of their kind)
+//   data-edit-item="path"   one item in a list, which you can move or remove
 //
 // Edits change a working copy of the data. Save compares it with the
 // original, applies only the differences to each file so comments and
@@ -42,7 +45,7 @@ let YAML; // the yaml library, loaded when editing starts
 let editing = false;
 const data = {}; // file -> contents when Edit was clicked
 const work = {}; // file -> working copy with your edits
-const origin = new WeakMap(); // list item in work -> its index in data
+const origin = new WeakMap(); // list item in work -> { list, index } it came from in data
 const uploads = new Map(); // repo path -> base64 contents of a new file
 let fonts;
 let ui;
@@ -154,6 +157,8 @@ async function commitChanges() {
       throw new Error(`${short(file)} was changed somewhere else after you clicked Edit. Reload the page and make your edits again.`);
     }
     const doc = YAML.parseDocument(text);
+    seqs = new Map();
+    indexSeqs(doc.contents, data[file]);
     doc.contents = sync(doc, doc.contents, data[file], work[file]);
     tree.push({ path: file, mode: '100644', type: 'blob', content: doc.toString(YAML_FORMAT) });
     names.push(short(file));
@@ -225,12 +230,24 @@ function clone(value) {
   if (Array.isArray(value)) {
     return value.map((item, i) => {
       const copy = clone(item);
-      if (isObject(copy)) origin.set(copy, i);
+      if (isObject(copy)) origin.set(copy, { list: value, index: i });
       return copy;
     });
   }
   if (isObject(value)) return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, clone(v)]));
   return value;
+}
+
+// Each list in the file's data -> its YAML node, so an item moved between lists
+// in the same file keeps its formatting.
+let seqs = new Map();
+function indexSeqs(node, value) {
+  if (Array.isArray(value) && YAML.isSeq(node)) {
+    seqs.set(value, node);
+    value.forEach((v, i) => indexSeqs(node.items[i], v));
+  } else if (isObject(value) && YAML.isMap(node)) {
+    Object.entries(value).forEach(([k, v]) => indexSeqs(node.get(k, true), v));
+  }
 }
 
 // Bring a YAML node in line with `next`, reusing every part that didn't change.
@@ -239,10 +256,13 @@ function sync(doc, node, orig, next) {
   if (Array.isArray(next) && Array.isArray(orig) && YAML.isSeq(node) && next.every(isObject)) {
     const spaced = node.items.some((n, i) => i > 0 && n.spaceBefore); // blank lines between items
     node.items = next.map((item) => {
-      const i = origin.get(item);
-      return i != null && node.items[i] ? sync(doc, node.items[i], orig[i], item) : newNode(doc, item);
+      // Reuse the item's YAML if it was in this list before (moved within it or untouched).
+      const from = origin.get(item);
+      if (from && from.list === orig && node.items[from.index]) return sync(doc, node.items[from.index], orig[from.index], item);
+      const elsewhere = from && seqs.get(from.list)?.items[from.index]; // moved here from another list
+      return elsewhere ? sync(doc, elsewhere.clone(), from.list[from.index], item) : newNode(doc, item);
     });
-    if (spaced) node.items.forEach((n, i) => { n.spaceBefore = i > 0; });
+    node.items.forEach((n, i) => { n.spaceBefore = spaced && i > 0; }); // moved-in items follow this list's spacing
     node.flow = false; // an empty `items: []` becomes a normal list once it has entries
     return node;
   }
@@ -374,7 +394,7 @@ async function startEditing() {
   editing = true;
   document.documentElement.classList.add('is-editing');
   decorate(document.body);
-  status('Click any outlined text to change it.');
+  status('Click any text to edit it. Hover over an item to move or remove it.');
   refreshBar();
 }
 
@@ -465,12 +485,25 @@ function itemsOf(list) {
   return [...list.querySelectorAll('[data-edit-item]')].filter((i) => i.parentElement.closest('[data-edit-list]') === list);
 }
 
+function templatesFor(list) {
+  const own = [...list.children].filter((c) => c.matches('template[data-edit-template]'));
+  return own.length ? own : [...document.querySelectorAll(`template[data-edit-template][data-kind="${list.dataset.editKind}"]`)];
+}
+
 function addListButton(list) {
-  const label = list.dataset.addLabel || 'Add';
-  const button = el(`<button type="button" class="edit-add edit-control" data-tool="add">+ ${label}</button>`);
-  button.list = list;
-  if (list.dataset.add === 'start') list.before(button);
-  else list.after(button);
+  const buttons = templatesFor(list).map((template) => {
+    const label = template.dataset.label || list.dataset.addLabel || 'Add';
+    const button = el(`<button type="button" class="edit-add edit-control" data-tool="add">+ ${label}</button>`);
+    button.list = list;
+    button.template = template;
+    return button;
+  });
+  if (!buttons.length) return;
+  const row = buttons.length > 1 ? el('<div class="edit-add-row edit-control"></div>') : null;
+  if (row) row.append(...buttons);
+  const node = row || buttons[0];
+  if (list.dataset.add === 'start') list.before(node);
+  else list.after(node);
 }
 
 function addItemTools(item) {
@@ -478,13 +511,36 @@ function addItemTools(item) {
   if (item.matches('[data-edit-url]') || item.querySelector(':scope > [data-edit-url]')) return; // links use the link popover
   const list = item.parentElement.closest('[data-edit-list]');
   const name = (list && list.dataset.itemName) || 'item';
-  const image = item.matches('.entry')
-    ? (item.querySelector('.entry-media') ? '<button type="button" data-tool="unimage">Remove image</button>' : '<button type="button" data-tool="image">Add image</button>')
-    : '';
-  item.append(el(`<div class="edit-item-tools edit-control">${image}<button type="button" data-tool="remove">Remove ${name}</button></div>`));
+  const hasImage = Boolean(item.querySelector('.entry-media'));
+  const image = !item.matches('.entry') ? ''
+    : hasImage ? `<button type="button" data-tool="unimage" title="Remove image" aria-label="Remove image">${ICONS.noImage}</button>`
+    : `<button type="button" data-tool="image" title="Add image" aria-label="Add image">${ICONS.image}</button>`;
+  const tools = el(`
+    <div class="edit-item-tools edit-control">
+      <button type="button" class="edit-handle" data-tool="drag" title="Drag to move (or use the arrow keys)" aria-label="Move ${name}">${ICONS.grip}</button>
+      ${image}
+      <button type="button" data-tool="remove" title="Remove ${name}" aria-label="Remove ${name}">${ICONS.remove}</button>
+    </div>`);
+  const handle = tools.querySelector('.edit-handle');
+  handle.addEventListener('pointerdown', (e) => startDrag(e, item));
+  handle.addEventListener('keydown', (e) => {
+    const step = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    nudge(item, step);
+    item.querySelector(':scope > .edit-item-tools .edit-handle')?.focus();
+  });
+  item.append(tools);
 }
 
-function addItem(list) {
+const ICONS = {
+  grip: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><g fill="currentColor"><circle cx="5.5" cy="3.5" r="1.3"/><circle cx="10.5" cy="3.5" r="1.3"/><circle cx="5.5" cy="8" r="1.3"/><circle cx="10.5" cy="8" r="1.3"/><circle cx="5.5" cy="12.5" r="1.3"/><circle cx="10.5" cy="12.5" r="1.3"/></g></svg>',
+  remove: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  image: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2.5 11.5l3.5-3.5 3 3 2-2 2.5 2.5"/></g></svg>',
+  noImage: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 14L14 2"/></g></svg>',
+};
+
+function addItem(list, template = templatesFor(list)[0]) {
   const listKey = list.dataset.editList;
   let items = getPath(listKey);
   if (!Array.isArray(items)) { items = []; setPath(listKey, items); }
@@ -492,7 +548,6 @@ function addItem(list) {
   const index = atStart ? 0 : items.length;
   items.splice(index, 0, {});
 
-  const template = [...list.children].find((c) => c.matches('template[data-edit-template]'));
   const item = template.content.cloneNode(true).firstElementChild;
   for (const node of [item, ...item.querySelectorAll('*')]) {
     for (const a of KEY_ATTRS) {
@@ -502,7 +557,7 @@ function addItem(list) {
   const existing = itemsOf(list);
   if (atStart && existing.length) existing[0].before(item);
   else if (!atStart && existing.length) existing.at(-1).after(item);
-  else template.after(item);
+  else list.prepend(item);
 
   renumber();
   decorate(item);
@@ -524,8 +579,127 @@ function removeItem(item) {
   refreshBar();
 }
 
-// After adding or removing, give every item the path of its new position.
+// Move an item to position `index` of `list` (which can be another list of the same kind).
+function moveItem(item, list, index) {
+  const key = item.dataset.editItem;
+  const cut = key.lastIndexOf('.');
+  const value = getPath(key.slice(0, cut)).splice(Number(key.slice(cut + 1)), 1)[0];
+  let target = getPath(list.dataset.editList);
+  if (!Array.isArray(target)) { target = []; setPath(list.dataset.editList, target); }
+  target.splice(index, 0, value);
+
+  const others = itemsOf(list).filter((i) => i !== item);
+  if (index < others.length) others[index].before(item);
+  else if (others.length) others.at(-1).after(item);
+  else list.prepend(item);
+  renumber();
+  refreshBar();
+  item.classList.add('edit-moved');
+  setTimeout(() => item.classList.remove('edit-moved'), 600);
+}
+
+function nudge(item, step) {
+  const list = item.parentElement.closest('[data-edit-list]');
+  const index = itemsOf(list).indexOf(item) + step;
+  if (index >= 0 && index < itemsOf(list).length) moveItem(item, list, index);
+}
+
+// Dragging by the handle. Works with a mouse, trackpad, or finger. Items can be
+// dropped anywhere in a list of the same kind, or onto a closed folder.
+function startDrag(e, item) {
+  if (e.button > 0) return;
+  e.preventDefault();
+  const handle = e.currentTarget;
+  handle.setPointerCapture(e.pointerId);
+  const kind = item.parentElement.closest('[data-edit-list]').dataset.editKind;
+  const marker = el('<div class="edit-drop-marker"></div>');
+  ui.append(marker);
+  item.classList.add('is-dragging');
+  let drop = null;
+  let target = null;
+
+  const move = (ev) => {
+    if (ev.clientY < 60) scrollBy(0, -14);
+    if (ev.clientY > innerHeight - 60) scrollBy(0, 14);
+    drop = findDrop(ev.clientX, ev.clientY, item, kind);
+    target?.classList.remove('is-drop-target');
+    target = drop && drop.folder;
+    target?.classList.add('is-drop-target');
+    marker.hidden = !drop || Boolean(drop.folder);
+    if (drop && !drop.folder) {
+      Object.assign(marker.style, {
+        top: `${drop.line.top + scrollY}px`, left: `${drop.line.left + scrollX}px`,
+        width: `${drop.line.width}px`, height: `${drop.line.height}px`,
+      });
+    }
+  };
+  const end = (ev) => {
+    handle.removeEventListener('pointermove', move);
+    handle.removeEventListener('pointerup', end);
+    handle.removeEventListener('pointercancel', end);
+    marker.remove();
+    target?.classList.remove('is-drop-target');
+    item.classList.remove('is-dragging');
+    if (ev.type === 'pointerup' && drop) moveItem(item, drop.list, drop.index);
+  };
+  handle.addEventListener('pointermove', move);
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
+}
+
+// Which list of this kind the pointer is "in": the smallest part of the page around
+// the pointer that holds exactly one such list (so a section's heading counts as
+// its list), or failing that, the closest one.
+function nearestList(x, y, item, kind) {
+  const selector = `[data-edit-list][data-edit-kind="${kind}"]`;
+  const usable = (list) => !item.contains(list) && list.offsetParent;
+  let candidates = [...document.querySelectorAll(selector)].filter(usable);
+  for (let node = document.elementFromPoint(x, y); node && node !== document.body; node = node.parentElement) {
+    const inside = [...(node.matches(selector) ? [node] : []), ...node.querySelectorAll(selector)].filter(usable);
+    if (inside.length === 1) return inside[0];
+    if (inside.length > 1) { candidates = inside; break; }
+  }
+  const distance = (list) => {
+    const r = list.getBoundingClientRect();
+    return Math.hypot(Math.max(r.left - x, 0, x - r.right), Math.max(r.top - y, 0, y - r.bottom));
+  };
+  return candidates.reduce((a, b) => (distance(b) < distance(a) ? b : a), item.parentElement.closest('[data-edit-list]'));
+}
+
+function findDrop(x, y, item, kind) {
+  const hit = document.elementFromPoint(x, y);
+  if (!hit) return null;
+  const folder = hit.closest('.folder-open')?.closest('.tile--folder'); // over a folder's cover: drop into it
+  if (kind === 'gallery' && folder && folder !== item && !item.contains(folder)) {
+    const list = folder.querySelector(':scope > .folder-view > [data-edit-list]');
+    return { list, index: 0, folder };
+  }
+  const list = nearestList(x, y, item, kind);
+  const items = itemsOf(list).filter((i) => i !== item && i.offsetParent);
+  if (!items.length) {
+    const r = list.getBoundingClientRect();
+    return { list, index: 0, line: { top: r.top, left: r.left, width: Math.max(r.width, 40), height: 2 } };
+  }
+  const rects = items.map((i) => i.getBoundingClientRect());
+  const dist = (r) => Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+  const n = rects.indexOf(rects.reduce((a, b) => (dist(b) < dist(a) ? b : a)));
+  const r = rects[n];
+  const style = getComputedStyle(list);
+  const inRow = style.display.includes('flex') && !style.flexDirection.startsWith('column');
+  const before = inRow ? x < r.left + r.width / 2 : y < r.top + r.height / 2;
+  const line = inRow
+    ? { top: r.top, left: before ? r.left - 4 : r.right + 2, width: 2, height: r.height }
+    : { top: before ? r.top - 3 : r.bottom + 1, left: r.left, width: r.width, height: 2 };
+  return { list, index: n + (before ? 0 : 1), line };
+}
+
+// After adding, moving, or removing, give every item the path of its new position.
 function renumber() {
+  document.querySelectorAll('.tile--folder').forEach((folder) => {
+    const n = itemsOf(folder.querySelector(':scope > .folder-view > [data-edit-list]')).length;
+    const count = folder.querySelector(':scope > .folder-name .folder-count');
+    if (count) count.textContent = `${n} ${n === 1 ? 'item' : 'items'}`;
+  });
   for (const list of document.querySelectorAll('[data-edit-list]')) {
     const listKey = list.dataset.editList;
     itemsOf(list).forEach((item, i) => {
@@ -546,17 +720,21 @@ function runTool(button) {
   const tool = button.dataset.tool;
   const item = button.closest('[data-edit-item]');
   if (tool === 'add') {
-    const list = button.list;
-    if ('addFile' in list.dataset) {
+    const { list, template } = button;
+    if ('needsFile' in template.dataset) {
       chooseFile('image/*,video/*,application/pdf', (file) => {
-        const added = addItem(list);
+        const added = addItem(list, template);
         assignFile(added.querySelector('[data-edit-file]'), file);
       });
     } else {
-      addItem(list);
+      addItem(list, template);
     }
   }
-  if (tool === 'remove') removeItem(item);
+  if (tool === 'remove') {
+    const inside = itemsOf(item.querySelector('[data-edit-list]') || item).length;
+    if (item.matches('.tile--folder') && inside && !confirm(`Remove this folder and the ${inside} thing${inside > 1 ? 's' : ''} in it?`)) return;
+    removeItem(item);
+  }
   if (tool === 'image') {
     chooseFile('image/*', (file) => {
       const key = `${item.dataset.editItem}.image`;
@@ -638,7 +816,9 @@ function showLinkPop(link) {
       <label>Address <input type="text" inputmode="url" placeholder="https://… or mailto:you@example.com" /></label>
       <div class="edit-row">
         <button type="button" data-pop="upload">Upload a file</button>
-        <button type="button" data-pop="remove">Remove link</button>
+        <button type="button" data-pop="earlier" title="Move earlier" aria-label="Move earlier">←</button>
+        <button type="button" data-pop="later" title="Move later" aria-label="Move later">→</button>
+        <button type="button" data-pop="remove">Remove</button>
       </div>
     </div>`);
   pop.link = link;
@@ -653,6 +833,12 @@ function showLinkPop(link) {
   pop.addEventListener('click', (e) => {
     const act = e.target.closest('[data-pop]')?.dataset.pop;
     if (act === 'remove') removeItem(link.closest('[data-edit-item]'));
+    if (act === 'earlier' || act === 'later') {
+      nudge(link.closest('[data-edit-item]'), act === 'earlier' ? -1 : 1);
+      const r = link.getBoundingClientRect();
+      pop.style.top = `${r.bottom + scrollY + 8}px`;
+      pop.style.left = `${Math.max(8, Math.min(r.left + scrollX, scrollX + innerWidth - pop.offsetWidth - 8))}px`;
+    }
     if (act === 'upload') {
       chooseFile('*/*', (file) => {
         assignFile(link, file, link.dataset.editUrl, 'assets/docs');
@@ -723,6 +909,10 @@ document.addEventListener('input', (e) => {
   const field = editing && e.target.closest?.('[data-edit]');
   if (!field || field.dataset.editType === 'markdown') return;
   setField(field.dataset.edit, field.textContent.trim(), field.dataset.editType);
+  // The same value can appear twice (a folder's name on its tile and in its header).
+  document.querySelectorAll(`[data-edit="${CSS.escape(field.dataset.edit)}"]`).forEach((other) => {
+    if (other !== field) other.textContent = field.textContent;
+  });
 });
 
 document.addEventListener('keydown', (e) => {
@@ -760,6 +950,7 @@ document.addEventListener('click', (e) => {
     if (tool) { e.preventDefault(); runTool(tool); }
     return;
   }
+  if (e.target.closest('[data-nav]')) return; // opening and closing folders still works
   // Don't follow links while editing: clicking a link's text edits it.
   if (e.target.closest('a, button')) e.preventDefault();
   const fileTarget = e.target.closest('[data-edit-file]');
