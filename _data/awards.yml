@@ -8,13 +8,7 @@ groups:
       - name: "Northeastern National Recognition Program Scholarship"
         detail: "$40,000"
       - name: "NUAccelerate Scholarship"
+        detail: $17,000
+      - name: National Grid CECA Scholarship
+        detail: $2,000
       - name: "UPLIFT Program Scholar"
-
-  - heading: "Outside Northeastern"
-    items:
-      - name: "National Merit Scholar"
-        year: "2023"
-      - name: "National HSF Scholar"
-        year: "2023"
-      - name: "National Grid CECA Scholarship"
-        detail: "$2,000"
