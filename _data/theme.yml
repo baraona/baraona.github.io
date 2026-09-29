@@ -2,8 +2,8 @@
 # Easiest to change on the site itself: sign in, click Edit, then Colors and fonts.
 # Fonts must be names listed in _data/fonts.yml.
 
-text_font: Newsreader # headings and paragraphs
-detail_font: IBM Plex Sans # menu, dates, labels, and links under entries
+text_font: EB Garamond # headings and paragraphs
+detail_font: Literata # menu, dates, labels, and links under entries
 
 light:
   accent: "#bf5700" # links and highlights (UT burnt orange)
