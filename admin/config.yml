@@ -229,6 +229,92 @@ collections:
         name: year
         widget: string
         required: false
+  - name: theme
+    label: Colors and fonts
+    file: _data/theme.yml
+    fields:
+    - label: Main font
+      name: text_font
+      widget: select
+      hint: Headings and paragraphs
+      options:
+      - Newsreader
+      - Source Serif 4
+      - Literata
+      - Fraunces
+      - EB Garamond
+      - Lora
+      - Crimson Pro
+      - Libre Baskerville
+      - IBM Plex Sans
+      - Inter
+      - DM Sans
+      - Work Sans
+      - Space Grotesk
+      - IBM Plex Mono
+    - label: Detail font
+      name: detail_font
+      widget: select
+      hint: Menu, dates, and labels
+      options:
+      - Newsreader
+      - Source Serif 4
+      - Literata
+      - Fraunces
+      - EB Garamond
+      - Lora
+      - Crimson Pro
+      - Libre Baskerville
+      - IBM Plex Sans
+      - Inter
+      - DM Sans
+      - Work Sans
+      - Space Grotesk
+      - IBM Plex Mono
+    - label: Light mode colors
+      name: light
+      widget: object
+      fields:
+      - label: Accent (links)
+        name: accent
+        widget: color
+      - label: Text
+        name: text
+        widget: color
+      - label: Soft text
+        name: text_soft
+        widget: color
+      - label: Faint text (dates)
+        name: text_faint
+        widget: color
+      - label: Lines
+        name: lines
+        widget: color
+      - label: Background
+        name: background
+        widget: color
+    - label: Dark mode colors
+      name: dark
+      widget: object
+      fields:
+      - label: Accent (links)
+        name: accent
+        widget: color
+      - label: Text
+        name: text
+        widget: color
+      - label: Soft text
+        name: text_soft
+        widget: color
+      - label: Faint text (dates)
+        name: text_faint
+        widget: color
+      - label: Lines
+        name: lines
+        widget: color
+      - label: Background
+        name: background
+        widget: color
   - name: gallery
     label: Life gallery
     file: _data/gallery.yml

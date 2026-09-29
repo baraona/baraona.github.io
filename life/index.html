@@ -7,17 +7,9 @@ title: Life
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Life · {{ me.name }}</title>
-  <meta name="description" content="{{ g.intro | default: 'Personal photos' | strip }}" />
-  <meta name="color-scheme" content="light dark" />
-  <link rel="canonical" href="{{ site.url }}/life/" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/css/site.css" />
+{%- capture title %}Life · {{ me.name }}{% endcapture -%}
+{%- capture url %}{{ site.url }}/life/{% endcapture -%}
+{%- include head.html title=title description=g.intro url=url %}
 </head>
 <body class="wide">
   <a class="skip" href="#content">Skip to content</a>
@@ -35,7 +27,7 @@ title: Life
   <main class="page page--wide" id="content">
     <header class="life-head">
       <h1>Life</h1>
-      {%- if g.intro %}<p class="tagline">{{ g.intro }}</p>{% endif %}
+      {%- if g.intro %}<p class="tagline" data-edit="gallery.intro">{{ g.intro }}</p>{% endif %}
     </header>
 
     {%- if g.items.size > 0 %}
@@ -60,8 +52,8 @@ title: Life
         {%- endif %}
         {%- if item.caption or item.date %}
         <p class="tile-caption">
-          {%- if item.caption %}{{ item.caption }}{% endif -%}
-          {%- if item.date %} <span class="tile-date">{{ item.date }}</span>{% endif -%}
+          {%- if item.caption %}<span data-edit="gallery.items.{{ forloop.index0 }}.caption">{{ item.caption }}</span>{% endif -%}
+          {%- if item.date %} <span class="tile-date" data-edit="gallery.items.{{ forloop.index0 }}.date">{{ item.date }}</span>{% endif -%}
         </p>
         {%- endif %}
       </li>

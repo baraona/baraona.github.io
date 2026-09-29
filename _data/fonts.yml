@@ -1,0 +1,47 @@
+# Fonts you can pick in _data/theme.yml. Each one loads from Google Fonts.
+# To add a font: find it on fonts.google.com, copy an entry below, and put
+# the part after "family=" from its embed link in "google".
+# Keep the list in admin/config.yml (the two font dropdowns) in sync.
+
+Newsreader:
+  google: "Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400"
+  fallback: "Georgia, serif"
+Source Serif 4:
+  google: "Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400"
+  fallback: "Georgia, serif"
+Literata:
+  google: "Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400"
+  fallback: "Georgia, serif"
+Fraunces:
+  google: "Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400"
+  fallback: "Georgia, serif"
+EB Garamond:
+  google: "EB+Garamond:ital,wght@0,400;0,500;1,400"
+  fallback: "Georgia, serif"
+Lora:
+  google: "Lora:ital,wght@0,400;0,500;1,400"
+  fallback: "Georgia, serif"
+Crimson Pro:
+  google: "Crimson+Pro:ital,wght@0,400;0,500;1,400"
+  fallback: "Georgia, serif"
+Libre Baskerville:
+  google: "Libre+Baskerville:ital,wght@0,400;0,700;1,400"
+  fallback: "Georgia, serif"
+IBM Plex Sans:
+  google: "IBM+Plex+Sans:ital,wght@0,400;0,500;1,400"
+  fallback: "system-ui, -apple-system, 'Segoe UI', sans-serif"
+Inter:
+  google: "Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;1,14..32,400"
+  fallback: "system-ui, -apple-system, 'Segoe UI', sans-serif"
+DM Sans:
+  google: "DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400"
+  fallback: "system-ui, -apple-system, 'Segoe UI', sans-serif"
+Work Sans:
+  google: "Work+Sans:ital,wght@0,400;0,500;1,400"
+  fallback: "system-ui, -apple-system, 'Segoe UI', sans-serif"
+Space Grotesk:
+  google: "Space+Grotesk:wght@400;500"
+  fallback: "system-ui, -apple-system, 'Segoe UI', sans-serif"
+IBM Plex Mono:
+  google: "IBM+Plex+Mono:ital,wght@0,400;0,500;1,400"
+  fallback: "ui-monospace, Menlo, monospace"

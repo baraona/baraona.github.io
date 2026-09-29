@@ -7,15 +7,12 @@ items:
     where: "Wang Lab, UT Austin"
     dates: "2025 – present"
     description: >-
-      Developing adaptive automatic speech recognition pipelines for people who
-      stutter or have dysarthria or apraxia. The system learns from each user
-      over time, closing the performance gap between typical and disordered speech.
+      Developing adaptive automatic speech recognition pipelines for people who stutter or have dysarthria or apraxia. The system learns from each user over time, closing the performance gap between typical and disordered speech.
     skills: [Speech recognition, Machine learning, Python]
 
   - title: "Human-Robot Collaboration"
     where: "Action Lab, Northeastern University"
     dates: "2024"
     description: >-
-      Calibrated motion-capture data in Qualisys Track Manager to analyze
-      discrete and rhythmic motor patterns, as part of the UPLIFT Program.
+      Calibrated motion-capture data in Qualisys Track Manager to analyze discrete and rhythmic motor patterns, as part of the UPLIFT Program.
     skills: [Motion capture, Data analysis]

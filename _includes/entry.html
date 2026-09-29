@@ -1,23 +1,24 @@
 {%- assign e = include.item -%}
+{%- capture k %}{{ include.key }}.items.{{ include.index }}{% endcapture -%}
 <article class="entry{% if e.image %} entry--media{% endif %}">
   <div class="entry-body">
-    <h3 class="entry-title">{{ e.title }}</h3>
+    <h3 class="entry-title" data-edit="{{ k }}.title">{{ e.title }}</h3>
     {%- if e.where or e.dates %}
     <p class="entry-meta">
-      {%- if e.where %}<span>{{ e.where }}</span>{% endif -%}
-      {%- if e.dates %}<span class="entry-dates">{{ e.dates }}</span>{% endif -%}
+      {%- if e.where %}<span data-edit="{{ k }}.where">{{ e.where }}</span>{% endif -%}
+      {%- if e.dates %}<span class="entry-dates" data-edit="{{ k }}.dates">{{ e.dates }}</span>{% endif -%}
     </p>
     {%- endif %}
     {%- if e.description %}
-    <div class="entry-desc">{{ e.description | markdownify }}</div>
+    <div class="entry-desc" data-edit="{{ k }}.description" data-edit-type="markdown">{{ e.description | markdownify }}</div>
     {%- endif %}
     {%- if e.skills %}
-    <p class="entry-skills">{{ e.skills | join: ", " }}</p>
+    <p class="entry-skills" data-edit="{{ k }}.skills" data-edit-type="list">{{ e.skills | join: ", " }}</p>
     {%- endif %}
     {%- if e.links %}
     <p class="entry-links">
       {%- for link in e.links %}
-      <a href="{{ link.url }}"{% unless link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %}>{{ link.label }}</a>
+      <a href="{{ link.url }}"{% unless link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %} data-edit="{{ k }}.links.{{ forloop.index0 }}.label">{{ link.label }}</a>
       {%- endfor %}
     </p>
     {%- endif %}

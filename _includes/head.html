@@ -1,0 +1,36 @@
+{%- assign me = site.data.profile -%}
+{%- assign theme = site.data.theme -%}
+{%- assign text_font = site.data.fonts[theme.text_font] -%}
+{%- assign detail_font = site.data.fonts[theme.detail_font] -%}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ include.title }}</title>
+  <meta name="description" content="{{ include.description | strip }}" />
+  <meta property="og:title" content="{{ include.title }}" />
+  <meta property="og:description" content="{{ include.description | strip }}" />
+  <meta property="og:url" content="{{ include.url }}" />
+  <meta property="og:image" content="{{ me.photo | absolute_url }}" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="canonical" href="{{ include.url }}" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link id="theme-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{ text_font.google }}{% if detail_font.google != text_font.google %}&family={{ detail_font.google }}{% endif %}&display=swap" />
+  <style id="theme">
+    :root {
+      --font-text: '{{ theme.text_font }}', {{ text_font.fallback }};
+      --font-detail: '{{ theme.detail_font }}', {{ detail_font.fallback }};
+      {%- for c in theme.light %}
+      --{{ c[0] | replace: '_', '-' }}: {{ c[1] }};
+      {%- endfor %}
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        {%- for c in theme.dark %}
+        --{{ c[0] | replace: '_', '-' }}: {{ c[1] }};
+        {%- endfor %}
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/assets/css/site.css" />
+  <script type="module" src="/assets/js/edit.js"></script>

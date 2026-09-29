@@ -7,10 +7,7 @@ items:
     where: "Capstone, Northeastern University"
     dates: "2025"
     description: >-
-      A BLE wristband and base station that continuously monitor heart rate,
-      SpO2, temperature, and motion for patients in hospital waiting rooms, and
-      generate real-time severity scores so clinicians can prioritize care.
-      I designed the custom PCB and firmware and built the clinical dashboard.
+      A BLE wristband and base station that continuously monitor heart rate, SpO2, temperature, and motion for patients in hospital waiting rooms, and generate real-time severity scores so clinicians can prioritize care. I designed the custom PCB and firmware and built the clinical dashboard.
     skills: [PCB design, Embedded firmware, Bluetooth Low Energy, Web dashboard]
     image: assets/images/vitallink.jfif
     image_alt: "The VitalLink team presenting at Northeastern's ECE Capstone Design Competition"
@@ -23,9 +20,7 @@ items:
   - title: "CaptionXR: Real-Time XR Captioning"
     where: "Personal project"
     description: >-
-      A Unity overlay that renders live speech captions inside an extended
-      reality environment, pairing speech recognition with spatial UI for
-      accessibility.
+      A Unity overlay that renders live speech captions inside an extended reality environment, pairing speech recognition with spatial UI for accessibility.
     skills: [Unity, C#, Speech recognition, XR]
     # links:
     #   - label: Code

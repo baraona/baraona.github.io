@@ -1,0 +1,22 @@
+# COLORS AND FONTS.
+# Easiest to change on the site itself: sign in, click Edit, then Colors and fonts.
+# Fonts must be names listed in _data/fonts.yml.
+
+text_font: Newsreader # headings and paragraphs
+detail_font: IBM Plex Sans # menu, dates, labels, and links under entries
+
+light:
+  accent: "#bf5700" # links and highlights (UT burnt orange)
+  text: "#1f1f1f"
+  text_soft: "#545454" # tagline
+  text_faint: "#767676" # dates and labels
+  lines: "#e7e5e2" # dividers
+  background: "#ffffff"
+
+dark:
+  accent: "#f08a3e"
+  text: "#e9e7e4"
+  text_soft: "#b5b2ae"
+  text_faint: "#8d8a86"
+  lines: "#2e2d2b"
+  background: "#181716"

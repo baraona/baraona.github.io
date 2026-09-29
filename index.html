@@ -6,21 +6,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ me.name }}</title>
-  <meta name="description" content="{{ me.description | strip }}" />
-  <meta property="og:title" content="{{ me.name }}" />
-  <meta property="og:description" content="{{ me.description | strip }}" />
-  <meta property="og:url" content="{{ site.url }}" />
-  <meta property="og:image" content="{{ me.photo | absolute_url }}" />
-  <meta name="color-scheme" content="light dark" />
-  <link rel="canonical" href="{{ site.url }}" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/site.css" />
+{%- include head.html title=me.name description=me.description url=site.url %}
 </head>
 <body>
   <a class="skip" href="#content">Skip to content</a>
@@ -46,14 +32,14 @@
       <div class="portrait"><img src="{{ me.photo }}" alt="Portrait of {{ me.name }}" /></div>
       {%- endif %}
       <div class="intro-text">
-        <h1>{{ me.name }}</h1>
-        <p class="tagline">{{ me.tagline }}</p>
+        <h1 data-edit="profile.name">{{ me.name }}</h1>
+        <p class="tagline" data-edit="profile.tagline">{{ me.tagline }}</p>
         {%- if me.status %}
-        <p class="status">{{ me.status }}</p>
+        <p class="status" data-edit="profile.status">{{ me.status }}</p>
         {%- endif %}
         <ul class="contact">
           {%- for link in me.links %}
-          <li><a href="{{ link.url }}"{% unless link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %}>{{ link.label }}</a></li>
+          <li><a href="{{ link.url }}"{% unless link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %} data-edit="profile.links.{{ forloop.index0 }}.label">{{ link.label }}</a></li>
           {%- endfor %}
           {%- if me.cv %}<li><a href="{{ me.cv }}" target="_blank" rel="noopener">CV (PDF)</a></li>{% endif %}
         </ul>
@@ -63,7 +49,7 @@
     <div id="content">
       <section class="block" id="about">
         <h2>About</h2>
-        <div class="prose">
+        <div class="prose" data-edit="profile.about" data-edit-type="markdown">
           {{ me.about | markdownify }}
         </div>
       </section>
@@ -74,8 +60,8 @@
         <ul class="news">
           {%- for item in site.data.news.items %}
           <li>
-            <span class="news-date">{{ item.date }}</span>
-            <span class="news-text">{{ item.text | markdownify | remove: '<p>' | remove: '</p>' | strip }}</span>
+            <span class="news-date" data-edit="news.items.{{ forloop.index0 }}.date">{{ item.date }}</span>
+            <span class="news-text" data-edit="news.items.{{ forloop.index0 }}.text" data-edit-type="markdown">{{ item.text | markdownify | remove: '<p>' | remove: '</p>' | strip }}</span>
           </li>
           {%- endfor %}
         </ul>
@@ -86,7 +72,7 @@
       <section class="block" id="research">
         <h2>Research</h2>
         {%- for item in site.data.research.items %}
-          {% include entry.html item=item %}
+          {% include entry.html item=item key="research" index=forloop.index0 %}
         {%- endfor %}
       </section>
       {%- endif %}
@@ -95,7 +81,7 @@
       <section class="block" id="projects">
         <h2>Projects</h2>
         {%- for item in site.data.projects.items %}
-          {% include entry.html item=item %}
+          {% include entry.html item=item key="projects" index=forloop.index0 %}
         {%- endfor %}
       </section>
       {%- endif %}
@@ -106,8 +92,8 @@
         <ul class="awards">
           {%- for a in site.data.awards.items %}
           <li>
-            <span class="award-name">{{ a.name }}{% if a.detail %}<span class="award-detail">, {{ a.detail }}</span>{% endif %}</span>
-            {%- if a.year %}<span class="award-year">{{ a.year }}</span>{% endif %}
+            <span class="award-name"><span data-edit="awards.items.{{ forloop.index0 }}.name">{{ a.name }}</span>{% if a.detail %}<span class="award-detail">, <span data-edit="awards.items.{{ forloop.index0 }}.detail">{{ a.detail }}</span></span>{% endif %}</span>
+            {%- if a.year %}<span class="award-year" data-edit="awards.items.{{ forloop.index0 }}.year">{{ a.year }}</span>{% endif %}
           </li>
           {%- endfor %}
         </ul>
