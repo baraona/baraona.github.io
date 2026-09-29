@@ -6,7 +6,7 @@ page, or use the full editor at **https://baraona.org/admin**.
 
 ## Editing on the page
 
-1. Sign in once per browser: click **Edit** in the footer (or go to
+1. Log in once per browser: click **Log in** at the bottom of any page (or go to
    **https://baraona.org/?edit**) and paste a token (see below). If I'm
    already signed in at /admin, this step is skipped.
 2. On any page, click **Edit page** (bottom right). Everything I can change
@@ -51,11 +51,11 @@ be made once per browser.
 2. Repository access: **Only select repositories** → `baraona/baraona.github.io`.
 3. Permissions → Repository permissions → **Contents: Read and write**.
 4. Pick an expiration (for example, one year) and generate it.
-5. Paste it at https://baraona.org/?edit, or at https://baraona.org/admin
+5. Click **Log in** at the bottom of any page and paste it, or use https://baraona.org/admin
    under **Sign in with token**.
 
 Keep the token private. The editors are public, but they can't change anything
-without a token that has write access to this repo. **Sign out** in the
+without a token that has write access to this repo. **Log out** in the
 toolbar removes it from that browser. If a token ever leaks, delete it on
 GitHub and make a new one.
 
@@ -80,8 +80,11 @@ GitHub and make a new one.
 On the Life page, sign in and click **Edit page**, then **+ Add folder** or
 **+ Add photo or video**. Folders open in place (their address, like
 baraona.org/life/#sienna, can be shared) and can hold more folders. Uploads are
-stored in `assets/life/`. A folder's cover is its first photo unless I pick
-one with the image button on the folder (any photo inside it, or a new upload).
+stored in `assets/life/`. Every tile is the same size; visitors click a photo
+or video to see it full size. A folder's cover is its first photo (or, for a
+folder holding only folders, the first cover found inside) unless I pick one
+with the image button on the folder: any photo inside it, or a new upload.
+Folders with nothing to show get a **Choose cover** button while editing.
 Drop a photo on the middle of a folder's cover to put it inside; drop it near
 the edges to reorder. /admin shows folders up to three levels deep.
 

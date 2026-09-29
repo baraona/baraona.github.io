@@ -13,11 +13,15 @@
 <li class="tile tile--{{ gallery_kind }}" data-edit-item="{{ include.key }}">
   <div class="tile-media" data-edit-file="{{ include.key }}.file" data-accept="image/*,video/*,application/pdf" data-folder="assets/life">
     {%- if gallery_kind == 'image' %}
-    <button class="tile-open" type="button" data-src="{{ include.item.file }}" data-caption="{{ include.item.caption | escape }}" data-date="{{ include.item.date | escape }}" aria-label="Open photo{% if include.item.caption %}: {{ include.item.caption | escape }}{% endif %}">
+    <button class="tile-open lightbox-open" type="button" data-src="{{ include.item.file }}" data-caption="{{ include.item.caption | escape }}" data-date="{{ include.item.date | escape }}" aria-label="View photo{% if include.item.caption %}: {{ include.item.caption | escape }}{% endif %}">
       <img src="{{ include.item.file }}" alt="{{ include.item.alt | default: include.item.caption | escape }}" loading="lazy" />
     </button>
     {%- elsif gallery_kind == 'video' %}
-    <video src="{{ include.item.file }}" controls preload="metadata" playsinline{% if include.item.poster %} poster="{{ include.item.poster }}"{% endif %}></video>
+    <button class="tile-open lightbox-open" type="button" data-kind="video" data-src="{{ include.item.file }}" data-caption="{{ include.item.caption | escape }}" data-date="{{ include.item.date | escape }}" aria-label="Play video{% if include.item.caption %}: {{ include.item.caption | escape }}{% endif %}">
+      {%- comment -%} #t=0.1 makes phones show the first frame instead of a blank box {%- endcomment %}
+      <video src="{{ include.item.file }}#t=0.1" muted preload="metadata" playsinline tabindex="-1"{% if include.item.poster %} poster="{{ include.item.poster }}"{% endif %}></video>
+      <span class="tile-play" aria-hidden="true"></span>
+    </button>
     {%- elsif include.item.file %}
     <a class="tile-file" href="{{ include.item.file }}" target="_blank" rel="noopener">
       <span class="tile-file-ext">{{ gallery_ext | upcase }}</span>
@@ -30,15 +34,10 @@
 {%- else -%}
 {%- capture gallery_path %}{% if include.path and include.path != '' %}{{ include.path }}/{% endif %}{{ include.item.title | slugify }}{% endcapture -%}
 <li class="tile tile--folder" data-edit-item="{{ include.key }}" data-path="{{ gallery_path }}">
-  {%- assign gallery_cover = include.item.cover -%}
-  {%- unless gallery_cover -%}
-    {%- for gallery_child in include.item.items -%}
-      {%- assign gallery_ext = gallery_child.file | split: '.' | last | downcase -%}
-      {%- if gallery_ext == 'jpg' or gallery_ext == 'jpeg' or gallery_ext == 'png' or gallery_ext == 'webp' or gallery_ext == 'gif' or gallery_ext == 'avif' or gallery_ext == 'jfif' %}{% assign gallery_cover = gallery_child.file %}{% break %}{% endif -%}
-    {%- endfor -%}
-  {%- endunless %}
+  {%- assign gallery_found = include.item.cover -%}
+  {%- unless gallery_found %}{% include gallery-cover.html items=include.item.items %}{% endunless %}
   <a class="folder-open" href="#{{ gallery_path }}" data-nav aria-label="Open folder {{ include.item.title | escape }}">
-    <span class="folder-cover">{% if gallery_cover %}<img src="{{ gallery_cover }}" alt="" loading="lazy" />{% endif %}</span>
+    <span class="folder-cover">{% if gallery_found %}<img src="{{ gallery_found }}" alt="" loading="lazy" />{% endif %}</span>
   </a>
   {%- assign gallery_count = include.item.items.size | default: 0 %}
   <p class="folder-name"><span data-edit="{{ include.key }}.title" data-placeholder="Folder name">{{ include.item.title }}</span><span class="folder-count">{{ gallery_count }} {% if gallery_count == 1 %}item{% else %}items{% endif %}</span></p>

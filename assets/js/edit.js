@@ -69,7 +69,7 @@ function readToken() {
 }
 
 function signOut() {
-  if (isDirty() && !confirm('Sign out and discard your unsaved changes?')) return;
+  if (isDirty() && !confirm('Log out and discard your unsaved changes?')) return;
   try {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(CMS_KEY);
@@ -81,7 +81,7 @@ function showSignIn() {
   const box = el(`
     <dialog class="edit-signin">
       <form method="dialog">
-        <h2>Sign in to edit</h2>
+        <h2>Log in to edit</h2>
         <p>Paste a GitHub token with <b>Contents: Read and write</b> access to
           <code>${REPO}</code>. It stays in this browser only.
           <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Make a token</a></p>
@@ -89,7 +89,7 @@ function showSignIn() {
         <p class="edit-error" hidden></p>
         <div class="edit-row">
           <button value="cancel" formnovalidate>Cancel</button>
-          <button class="edit-primary" value="ok">Sign in</button>
+          <button class="edit-primary" value="ok">Log in</button>
         </div>
       </form>
     </dialog>`);
@@ -352,7 +352,7 @@ function showBar() {
       <button data-act="theme" hidden>Colors and fonts</button>
       <button data-act="cancel" hidden>Cancel</button>
       <button data-act="save" class="edit-primary" hidden disabled>Save</button>
-      <button data-act="signout" class="edit-quiet" title="Sign out of the editor in this browser">Sign out</button>
+      <button data-act="signout" class="edit-quiet" title="Log out of the editor in this browser">Log out</button>
     </div>`);
   ui.append(bar);
   bar.addEventListener('click', (e) => {
@@ -518,7 +518,7 @@ function addListButton(list) {
 }
 
 function addItemTools(item) {
-  item.querySelector(':scope > .edit-item-tools')?.remove();
+  item.querySelectorAll(':scope > .edit-item-tools, :scope > .edit-cover-empty').forEach((t) => t.remove());
   if (item.matches('[data-edit-url]') || item.querySelector(':scope > [data-edit-url]')) return; // links use the link popover
   const list = item.parentElement.closest('[data-edit-list]');
   const name = (list && list.dataset.itemName) || 'item';
@@ -544,6 +544,9 @@ function addItemTools(item) {
     item.querySelector(':scope > .edit-item-tools .edit-handle')?.focus();
   });
   item.append(tools);
+  if (item.matches('.tile--folder')) {
+    item.append(el(`<div class="edit-cover-empty edit-control"><button type="button" data-tool="cover">Choose cover</button></div>`));
+  }
 }
 
 const ICONS = {
@@ -686,8 +689,8 @@ function findDrop(x, y, item, kind) {
   const hit = document.elementFromPoint(x, y);
   if (!hit) return null;
   // Over the middle of a folder's cover: put it in the folder. Near the edges: reorder.
-  const cover = hit.closest('.folder-open');
-  const folder = cover?.closest('.tile--folder');
+  const folder = hit.closest('.folder-open, .edit-cover-empty')?.closest('.tile--folder');
+  const cover = folder?.querySelector(':scope > .folder-open');
   const box = cover?.getBoundingClientRect();
   const middle = box && Math.abs(x - (box.left + box.width / 2)) < box.width / 4 && Math.abs(y - (box.top + box.height / 2)) < box.height / 4;
   if (kind === 'gallery' && middle && folder !== item && !item.contains(folder)) {
@@ -705,7 +708,7 @@ function findDrop(x, y, item, kind) {
   const n = rects.indexOf(rects.reduce((a, b) => (dist(b) < dist(a) ? b : a)));
   const r = rects[n];
   const style = getComputedStyle(list);
-  const columns = style.columnCount !== 'auto' || style.columnWidth !== 'auto'; // the Life grid
+  const columns = style.display.includes('grid') || style.columnCount !== 'auto' || style.columnWidth !== 'auto'; // the Life grid
   const inRow = (style.display.includes('flex') && !style.flexDirection.startsWith('column'))
     || (columns && y >= r.top && y <= r.bottom); // side by side: left or right of the item decides
   const before = inRow ? x < r.left + r.width / 2 : y < r.top + r.height / 2;
@@ -891,12 +894,23 @@ function showCoverPicker(folder, button) {
   }));
 }
 
+// Same search as _includes/gallery-cover.html: a photo directly inside first,
+// then the cover of the first folder inside that has one.
+function autoCover(items = []) {
+  const photo = items.find((i) => i.file && IMAGE_FILE.test(i.file));
+  if (photo) return photo.file;
+  for (const i of items) {
+    const found = !i.file && (i.cover || autoCover(i.items));
+    if (found) return found;
+  }
+  return null;
+}
+
 function setCover(folder, path) {
   const key = `${folder.dataset.editItem}.cover`;
   if ((getPath(key) || null) !== (path || null)) setField(key, path || '');
   const coverEl = folder.querySelector(':scope > .folder-open .folder-cover');
-  const first = (getPath(`${folder.dataset.editItem}.items`) || []).find((i) => i.file && IMAGE_FILE.test(i.file));
-  const shown = path || (first && first.file);
+  const shown = path || autoCover(getPath(`${folder.dataset.editItem}.items`));
   const src = shown ? previews.get(String(shown).replace(/^\//, '')) || shown : '';
   if ((coverEl.querySelector('img')?.getAttribute('src') || '') !== src) coverEl.innerHTML = src ? `<img src="${src}" alt="" />` : '';
 }
@@ -1044,7 +1058,7 @@ document.addEventListener('click', (e) => {
   const control = e.target.closest('.edit-control');
   if (control) {
     const tool = e.target.closest('[data-tool]');
-    if (tool) { e.preventDefault(); runTool(tool); }
+    if (tool) { e.preventDefault(); e.stopPropagation(); runTool(tool); }
     return;
   }
   if (e.target.closest('[data-nav]')) return; // opening and closing folders still works

@@ -37,15 +37,6 @@ title: Life
 
   {% include footer.html back_url="/" back_label="Back to work" %}
 
-  <dialog class="lightbox" aria-label="Photo viewer">
-    <figure>
-      <img alt="" />
-      <figcaption></figcaption>
-    </figure>
-    <button class="lb-btn lb-prev" type="button" aria-label="Previous photo">‹</button>
-    <button class="lb-btn lb-next" type="button" aria-label="Next photo">›</button>
-    <button class="lb-btn lb-close" type="button" aria-label="Close">×</button>
-  </dialog>
 
   <script>
     // Folders: the page holds every folder's contents; opening one hides everything
@@ -84,37 +75,7 @@ title: Life
       fromAddress();
     })();
 
-    // Lightbox: steps through the photos in the folder you're looking at.
-    (function () {
-      var box = document.querySelector('.lightbox');
-      if (!box || !box.showModal) return;
-      var img = box.querySelector('img'), cap = box.querySelector('figcaption'), tiles = [], i = 0;
-
-      function show(n) {
-        i = (n + tiles.length) % tiles.length;
-        var t = tiles[i];
-        img.src = t.dataset.src;
-        img.alt = t.dataset.caption || '';
-        cap.textContent = [t.dataset.caption, t.dataset.date].filter(Boolean).join(' — ');
-        cap.hidden = !cap.textContent;
-      }
-      document.addEventListener('click', function (e) {
-        var t = e.target.closest('.tile-open');
-        if (!t || document.documentElement.classList.contains('is-editing')) return;
-        tiles = Array.prototype.slice.call(t.closest('.gallery').querySelectorAll(':scope > .tile > .tile-media > .tile-open'));
-        box.querySelectorAll('.lb-prev, .lb-next').forEach(function (b) { b.hidden = tiles.length < 2; });
-        show(tiles.indexOf(t));
-        box.showModal();
-      });
-      box.querySelector('.lb-prev').onclick = function () { show(i - 1); };
-      box.querySelector('.lb-next').onclick = function () { show(i + 1); };
-      box.querySelector('.lb-close').onclick = function () { box.close(); };
-      box.addEventListener('click', function (e) { if (e.target === box) box.close(); });
-      box.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft') show(i - 1);
-        if (e.key === 'ArrowRight') show(i + 1);
-      });
-    })();
   </script>
+  {% include lightbox.html %}
 </body>
 </html>

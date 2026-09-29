@@ -1,0 +1,61 @@
+{%- comment -%}
+  Full-size viewer. Any element with class "lightbox-open" and data-src (plus optional
+  data-kind="video", data-caption, data-date) opens it. Inside a .gallery, the arrows step
+  through that folder's photos and videos. Does nothing while the page is being edited.
+{%- endcomment -%}
+<dialog class="lightbox" aria-label="Viewer">
+  <figure>
+    <img alt="" hidden />
+    <video controls playsinline hidden></video>
+    <figcaption></figcaption>
+  </figure>
+  <button class="lb-btn lb-prev" type="button" aria-label="Previous">‹</button>
+  <button class="lb-btn lb-next" type="button" aria-label="Next">›</button>
+  <button class="lb-btn lb-close" type="button" aria-label="Close" autofocus>×</button>
+</dialog>
+<script>
+  (function () {
+    var box = document.querySelector('.lightbox');
+    if (!box || !box.showModal) return;
+    var img = box.querySelector('img'), video = box.querySelector('video'), cap = box.querySelector('figcaption');
+    var items = [], i = 0;
+
+    function show(n) {
+      i = (n + items.length) % items.length;
+      var t = items[i], isVideo = t.dataset.kind === 'video';
+      video.pause();
+      img.hidden = isVideo;
+      video.hidden = !isVideo;
+      if (isVideo) {
+        video.src = t.dataset.src;
+        video.play().catch(function () {});
+      } else {
+        video.removeAttribute('src');
+        img.src = t.dataset.src;
+        img.alt = t.dataset.caption || '';
+      }
+      cap.textContent = [t.dataset.caption, t.dataset.date].filter(Boolean).join(' — ');
+      cap.hidden = !cap.textContent;
+    }
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest('.lightbox-open');
+      if (!t || document.documentElement.classList.contains('is-editing')) return;
+      e.preventDefault();
+      var list = t.closest('.gallery');
+      items = list ? Array.prototype.slice.call(list.querySelectorAll(':scope > .tile > .tile-media > .lightbox-open')) : [t];
+      box.querySelectorAll('.lb-prev, .lb-next').forEach(function (b) { b.hidden = items.length < 2; });
+      show(items.indexOf(t));
+      box.showModal();
+    });
+    box.querySelector('.lb-prev').onclick = function () { show(i - 1); };
+    box.querySelector('.lb-next').onclick = function () { show(i + 1); };
+    box.querySelector('.lb-close').onclick = function () { box.close(); };
+    box.addEventListener('click', function (e) { if (e.target === box) box.close(); });
+    box.addEventListener('close', function () { video.pause(); });
+    box.addEventListener('keydown', function (e) {
+      if (e.target === video) return; // arrow keys scrub the video
+      if (e.key === 'ArrowLeft') show(i - 1);
+      if (e.key === 'ArrowRight') show(i + 1);
+    });
+  })();
+</script>

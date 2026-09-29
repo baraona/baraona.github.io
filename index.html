@@ -16,7 +16,9 @@
   <main class="page" id="top">
     <section class="intro" aria-label="Introduction">
       {%- if me.photo %}
-      <div class="portrait" data-edit-file="profile.photo" data-accept="image/*" data-folder="assets/images"><img src="{{ me.photo }}" alt="Portrait of {{ me.name }}" /></div>
+      <div class="portrait" data-edit-file="profile.photo" data-accept="image/*" data-folder="assets/images">
+        <button class="portrait-open lightbox-open" type="button" data-src="{{ me.photo | relative_url }}" data-caption="{{ me.name }}" aria-label="View photo of {{ me.name }}"><img src="{{ me.photo | relative_url }}" alt="Portrait of {{ me.name }}" /></button>
+      </div>
       {%- endif %}
       <div class="intro-text">
         <h1 data-edit="profile.name" data-placeholder="Your name">{{ me.name }}</h1>
@@ -80,5 +82,6 @@
   </main>
 
   {% include footer.html back_url="#top" back_label="Back to top" %}
+  {% include lightbox.html %}
 </body>
 </html>

@@ -1,0 +1,18 @@
+{%- comment -%}
+  Finds a folder's automatic cover and leaves it in gallery_found: the first photo directly in
+  include.items, otherwise the cover of the first folder inside that has one (its own chosen
+  cover, or the same search inside it). Set gallery_found to false (or the chosen cover)
+  before including this. Keep in step with autoCover() in assets/js/edit.js.
+{%- endcomment -%}
+{%- assign gallery_image_exts = "jpg,jpeg,png,webp,gif,avif,jfif" | split: "," -%}
+{%- for gallery_c in include.items -%}
+  {%- if gallery_found %}{% break %}{% endif -%}
+  {%- assign gallery_e = gallery_c.file | split: '.' | last | downcase -%}
+  {%- if gallery_c.file and gallery_image_exts contains gallery_e %}{% assign gallery_found = gallery_c.file %}{% endif -%}
+{%- endfor -%}
+{%- for gallery_c in include.items -%}
+  {%- if gallery_found %}{% break %}{% endif -%}
+  {%- unless gallery_c.file -%}
+    {%- if gallery_c.cover %}{% assign gallery_found = gallery_c.cover %}{% else %}{% include gallery-cover.html items=gallery_c.items %}{% endif -%}
+  {%- endunless -%}
+{%- endfor -%}
