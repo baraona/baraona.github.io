@@ -1,20 +1,20 @@
-# HONORS & AWARDS. Most important first.
+# HONORS & AWARDS, grouped under headings. Most important first within each group.
 # Easiest to edit at https://baraona.org/admin
 # To edit by hand: copy an entry, paste it right under "items:", keep the indentation.
 
-items:
-  - name: "Northeastern National Recognition Program Scholarship"
-    detail: "$40,000"
+groups:
+  - heading: "Northeastern University"
+    items:
+      - name: "Northeastern National Recognition Program Scholarship"
+        detail: "$40,000"
+      - name: "NUAccelerate Scholarship"
+      - name: "UPLIFT Program Scholar"
 
-  - name: "National Merit Scholar"
-    year: "2023"
-
-  - name: "National HSF Scholar"
-    year: "2023"
-
-  - name: "National Grid CECA Scholarship"
-    detail: "$2,000"
-
-  - name: "NUAccelerate Scholarship"
-
-  - name: "UPLIFT Program Scholar"
+  - heading: "Outside Northeastern"
+    items:
+      - name: "National Merit Scholar"
+        year: "2023"
+      - name: "National HSF Scholar"
+        year: "2023"
+      - name: "National Grid CECA Scholarship"
+        detail: "$2,000"

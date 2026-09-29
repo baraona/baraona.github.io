@@ -16,7 +16,7 @@ title: Life
 
   <header class="bar">
     <nav class="bar-inner" aria-label="Site">
-      <a class="bar-name" href="/">{{ me.name }}</a>
+      <a class="bar-name" href="/" data-edit="profile.site_name">{{ me.site_name }}</a>
       <ul class="bar-links">
         <li><a href="/">Work</a></li>
         <li><a href="/life/" aria-current="page">Life</a></li>
@@ -27,40 +27,18 @@ title: Life
   <main class="page page--wide" id="content">
     <header class="life-head">
       <h1>Life</h1>
-      {%- if g.intro %}<p class="tagline" data-edit="gallery.intro">{{ g.intro }}</p>{% endif %}
+      <p class="tagline" data-edit="gallery.intro" data-placeholder="One line under the title">{{ g.intro }}</p>
     </header>
 
-    {%- if g.items.size > 0 %}
-    <ul class="gallery">
+    <ul class="gallery" data-edit-list="gallery.items" data-add="start" data-add-label="Add photo or video" data-add-file data-item-name="photo">
+      <template data-edit-template>{% include tile.html key="__KEY__" %}</template>
       {%- for item in g.items %}
-        {%- assign ext = item.file | split: '.' | last | downcase -%}
-        {%- assign kind = 'file' -%}
-        {%- if ext == 'jpg' or ext == 'jpeg' or ext == 'png' or ext == 'webp' or ext == 'gif' or ext == 'avif' %}{% assign kind = 'image' %}{% endif -%}
-        {%- if ext == 'mp4' or ext == 'webm' or ext == 'm4v' or ext == 'mov' %}{% assign kind = 'video' %}{% endif %}
-      <li class="tile tile--{{ kind }}">
-        {%- if kind == 'image' %}
-        <button class="tile-open" type="button" data-kind="image" data-src="{{ item.file }}" data-caption="{{ item.caption | escape }}" data-date="{{ item.date | escape }}" aria-label="Open photo{% if item.caption %}: {{ item.caption | escape }}{% endif %}">
-          <img src="{{ item.file }}" alt="{{ item.alt | default: item.caption | escape }}" loading="lazy" />
-        </button>
-        {%- elsif kind == 'video' %}
-        <video src="{{ item.file }}" controls preload="metadata" playsinline{% if item.poster %} poster="{{ item.poster }}"{% endif %}></video>
-        {%- else %}
-        <a class="tile-file" href="{{ item.file }}" target="_blank" rel="noopener">
-          <span class="tile-file-ext">{{ ext | upcase }}</span>
-          <span class="tile-file-name">{{ item.file | split: '/' | last }}</span>
-        </a>
-        {%- endif %}
-        {%- if item.caption or item.date %}
-        <p class="tile-caption">
-          {%- if item.caption %}<span data-edit="gallery.items.{{ forloop.index0 }}.caption">{{ item.caption }}</span>{% endif -%}
-          {%- if item.date %} <span class="tile-date" data-edit="gallery.items.{{ forloop.index0 }}.date">{{ item.date }}</span>{% endif -%}
-        </p>
-        {%- endif %}
-      </li>
+      {%- capture k %}gallery.items.{{ forloop.index0 }}{% endcapture %}
+      {% include tile.html item=item key=k %}
       {%- endfor %}
     </ul>
-    {%- else %}
-    <p class="empty">No photos yet. Add some at <a href="/admin/">/admin</a>.</p>
+    {%- if g.items.size == 0 %}
+    <p class="empty">No photos yet.</p>
     {%- endif %}
   </main>
 

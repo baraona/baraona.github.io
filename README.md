@@ -6,20 +6,29 @@ page, or use the full editor at **https://baraona.org/admin**.
 
 ## Editing on the page
 
-1. Sign in once per browser: go to **https://baraona.org/?edit** and paste a
-   token (see below). If I'm already signed in at /admin, this step is skipped.
-2. On any page, click **Edit page** (bottom right). Every piece of text I can
-   change gets a dotted outline. Click it and type. Paragraphs like About
-   open in a text box where `[text](https://link)`, `**bold**`, and `*italic*`
-   work.
+1. Sign in once per browser: click **Edit** in the footer (or go to
+   **https://baraona.org/?edit**) and paste a token (see below). If I'm
+   already signed in at /admin, this step is skipped.
+2. On any page, click **Edit page** (bottom right). Everything I can change
+   gets a dotted outline, and empty optional fields show a grey placeholder.
+   - **Text:** click and type. Paragraphs like About open in a text box where
+     `[text](https://link)`, `**bold**`, and `*italic*` work.
+   - **Add and remove:** every list has a **+ Add** button (news, research,
+     projects, awards, award groups, links, Life photos), and every item has a
+     **Remove** button. Entries also have **Add image** / **Remove image**.
+   - **Links:** click a link's text to edit it; a box underneath edits its
+     address, uploads a file for it (like a PDF), or removes it.
+   - **Files:** click my photo, the CV link, a project image, or a Life photo
+     to upload a replacement. A file of the same type replaces the old one at
+     the same address, so links I've shared keep working.
 3. **Colors and fonts** opens a panel with the main and detail fonts and the
    light- and dark-mode colors. Changes show up immediately.
-4. Click **Save**. All changes go into one commit, and the live site updates
+4. Click **Save**. Everything goes into one commit, and the live site updates
    about a minute later.
 
-Clearing a field removes it from the site (handy for the status line). To add
-or remove entries, reorder them, change link addresses, or upload photos and
-PDFs, use /admin.
+Clearing a field removes it from the site (handy for the status line). New
+items left blank aren't saved. Files for removed items stay in `assets/` until
+I delete them in the Media section of /admin.
 
 ## Editing at /admin
 
@@ -53,7 +62,7 @@ GitHub and make a new one.
 | News                                 | `_data/news.yml`       |
 | Research                             | `_data/research.yml`   |
 | Projects                             | `_data/projects.yml`   |
-| Honors and awards                    | `_data/awards.yml`     |
+| Honors and awards, grouped          | `_data/awards.yml`     |
 | Life gallery (baraona.org/life)      | `_data/gallery.yml`    |
 | Colors and fonts                     | `_data/theme.yml`      |
 | Fonts to choose from                 | `_data/fonts.yml`      |

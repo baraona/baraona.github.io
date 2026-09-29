@@ -1,0 +1,22 @@
+{%- comment -%} One photo, video, or file on the Life page. {%- endcomment -%}
+{%- assign tile_ext = include.item.file | split: '.' | last | downcase -%}
+{%- assign tile_kind = 'file' -%}
+{%- if tile_ext == 'jpg' or tile_ext == 'jpeg' or tile_ext == 'png' or tile_ext == 'webp' or tile_ext == 'gif' or tile_ext == 'avif' or tile_ext == 'jfif' %}{% assign tile_kind = 'image' %}{% endif -%}
+{%- if tile_ext == 'mp4' or tile_ext == 'webm' or tile_ext == 'm4v' or tile_ext == 'mov' %}{% assign tile_kind = 'video' %}{% endif -%}
+<li class="tile tile--{{ tile_kind }}" data-edit-item="{{ include.key }}">
+  <div class="tile-media" data-edit-file="{{ include.key }}.file" data-accept="image/*,video/*,application/pdf" data-folder="assets/life">
+    {%- if tile_kind == 'image' %}
+    <button class="tile-open" type="button" data-src="{{ include.item.file }}" data-caption="{{ include.item.caption | escape }}" data-date="{{ include.item.date | escape }}" aria-label="Open photo{% if include.item.caption %}: {{ include.item.caption | escape }}{% endif %}">
+      <img src="{{ include.item.file }}" alt="{{ include.item.alt | default: include.item.caption | escape }}" loading="lazy" />
+    </button>
+    {%- elsif tile_kind == 'video' %}
+    <video src="{{ include.item.file }}" controls preload="metadata" playsinline{% if include.item.poster %} poster="{{ include.item.poster }}"{% endif %}></video>
+    {%- elsif include.item.file %}
+    <a class="tile-file" href="{{ include.item.file }}" target="_blank" rel="noopener">
+      <span class="tile-file-ext">{{ tile_ext | upcase }}</span>
+      <span class="tile-file-name">{{ include.item.file | split: '/' | last }}</span>
+    </a>
+    {%- endif %}
+  </div>
+  <p class="tile-caption"><span data-edit="{{ include.key }}.caption" data-placeholder="Caption">{{ include.item.caption }}</span><span class="tile-date" data-edit="{{ include.key }}.date" data-placeholder="Date">{{ include.item.date }}</span></p>
+</li>

@@ -57,6 +57,49 @@
 .is-editing [data-edit]:hover { outline-style: solid; }
 .is-editing [data-edit]:focus { outline: 2px solid var(--accent); }
 .is-editing [data-edit-type="markdown"] { cursor: pointer; }
+.is-editing [data-edit]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-faint);
+  font-style: italic;
+}
+.is-editing [data-edit-file] {
+  outline: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 3px;
+  cursor: pointer;
+}
+.is-editing [data-edit-file]:hover { outline-style: solid; }
+.is-editing .empty { display: none; }
+
+/* Add and remove buttons, placed on the page next to what they change */
+.is-editing [data-edit-item] { position: relative; }
+.edit-control button, button.edit-control {
+  font: 500 12px/1.2 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--lines);
+  background: var(--background);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+.edit-control button:hover, button.edit-control:hover { color: var(--text); border-color: var(--text-faint); }
+.edit-item-tools {
+  position: absolute;
+  top: -14px;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  opacity: 0.55;
+}
+[data-edit-item]:hover > .edit-item-tools,
+[data-edit-item]:focus-within > .edit-item-tools { opacity: 1; }
+button.edit-add {
+  display: block;
+  margin: 10px 0 14px;
+  border-style: dashed;
+  color: var(--accent);
+}
+.edit-md-box { flex: 1 1 100%; }
 
 .edit-md {
   display: block;
@@ -75,6 +118,31 @@
   color: var(--text-faint);
   margin-top: 6px;
 }
+
+/* Link popover */
+.edit-pop {
+  position: absolute;
+  z-index: 110;
+  width: min(340px, calc(100vw - 16px));
+  padding: 12px;
+  background: var(--e-bg);
+  border: 1px solid var(--e-line);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+.edit-pop label { display: block; font-weight: 500; margin-bottom: 10px; }
+.edit-pop input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 8px;
+  font: inherit;
+  border: 1px solid var(--e-line);
+  border-radius: 8px;
+  background: var(--e-bg);
+  color: var(--e-ink);
+}
+.edit-pop .edit-row { justify-content: flex-start; }
 
 /* Colors and fonts panel */
 .edit-theme {

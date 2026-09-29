@@ -1,6 +1,7 @@
 #  Your personal info. Easiest: edit at https://baraona.org/admin
 
 name: "Alejandro Baraona"
+site_name: "baraona.org" # shown at the top left of every page
 description: "Alejandro Baraona is an ECE graduate student at UT Austin researching personalized speech recognition for people with disordered speech."
 tagline: "Electrical and computer engineer. MS student at UT Austin, BS from Northeastern. I build AI and hardware for biomedical and assistive devices."
 status: "Seeking summer 2027 internships and full-time roles from January 2028 in the Boston area."

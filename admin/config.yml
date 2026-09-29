@@ -22,6 +22,10 @@ collections:
     - label: Name
       name: name
       widget: string
+    - label: Site name
+      name: site_name
+      widget: string
+      hint: Shown at the top left of every page
     - label: Tagline
       name: tagline
       widget: text
@@ -210,25 +214,34 @@ collections:
     label: Honors and awards
     file: _data/awards.yml
     fields:
-    - label: Items
-      name: items
+    - label: Groups
+      name: groups
       widget: list
-      add_to_top: true
-      summary: '{{fields.name}}'
-      hint: Most important first. Drag to reorder.
+      summary: '{{fields.heading}}'
+      hint: Each group gets its own heading. Drag to reorder.
       fields:
-      - label: Name
-        name: name
+      - label: Heading
+        name: heading
         widget: string
-      - label: Detail
-        name: detail
-        widget: string
-        required: false
-        hint: e.g. $2,000
-      - label: Year
-        name: year
-        widget: string
-        required: false
+        hint: e.g. Northeastern University
+      - label: Awards
+        name: items
+        widget: list
+        summary: '{{fields.name}}'
+        hint: Most important first. Drag to reorder.
+        fields:
+        - label: Name
+          name: name
+          widget: string
+        - label: Detail
+          name: detail
+          widget: string
+          required: false
+          hint: e.g. $2,000
+        - label: Year
+          name: year
+          widget: string
+          required: false
   - name: theme
     label: Colors and fonts
     file: _data/theme.yml

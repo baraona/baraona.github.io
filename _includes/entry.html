@@ -1,31 +1,27 @@
-{%- assign e = include.item -%}
-{%- capture k %}{{ include.key }}.items.{{ include.index }}{% endcapture -%}
-<article class="entry{% if e.image %} entry--media{% endif %}">
+{%- comment -%}
+  A research or project entry. include.key is its place in _data, e.g. research.items.0
+  Includes share variables with the page, so this file only uses include.* and entry_* names.
+{%- endcomment -%}
+<article class="entry{% if include.item.image %} entry--media{% endif %}" data-edit-item="{{ include.key }}">
   <div class="entry-body">
-    <h3 class="entry-title" data-edit="{{ k }}.title">{{ e.title }}</h3>
-    {%- if e.where or e.dates %}
+    <h3 class="entry-title" data-edit="{{ include.key }}.title" data-placeholder="Title">{{ include.item.title }}</h3>
     <p class="entry-meta">
-      {%- if e.where %}<span data-edit="{{ k }}.where">{{ e.where }}</span>{% endif -%}
-      {%- if e.dates %}<span class="entry-dates" data-edit="{{ k }}.dates">{{ e.dates }}</span>{% endif -%}
+      <span data-edit="{{ include.key }}.where" data-placeholder="Where: lab, company, or course">{{ include.item.where }}</span>
+      <span class="entry-dates" data-edit="{{ include.key }}.dates" data-placeholder="Dates">{{ include.item.dates }}</span>
     </p>
-    {%- endif %}
-    {%- if e.description %}
-    <div class="entry-desc" data-edit="{{ k }}.description" data-edit-type="markdown">{{ e.description | markdownify }}</div>
-    {%- endif %}
-    {%- if e.skills %}
-    <p class="entry-skills" data-edit="{{ k }}.skills" data-edit-type="list">{{ e.skills | join: ", " }}</p>
-    {%- endif %}
-    {%- if e.links %}
-    <p class="entry-links">
-      {%- for link in e.links %}
-      <a href="{{ link.url }}"{% unless link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %} data-edit="{{ k }}.links.{{ forloop.index0 }}.label">{{ link.label }}</a>
+    <div class="entry-desc" data-edit="{{ include.key }}.description" data-edit-type="markdown" data-placeholder="Description">{% if include.item.description %}{{ include.item.description | markdownify }}{% endif %}</div>
+    <p class="entry-skills" data-edit="{{ include.key }}.skills" data-edit-type="list" data-placeholder="Skills, separated by commas">{{ include.item.skills | join: ", " }}</p>
+    <p class="entry-links" data-edit-list="{{ include.key }}.links" data-add="end" data-add-label="Add link">
+      <template data-edit-template>{% include link.html key="__KEY__" %}</template>
+      {%- for entry_link in include.item.links %}
+      {%- capture entry_link_key %}{{ include.key }}.links.{{ forloop.index0 }}{% endcapture %}
+      {% include link.html link=entry_link key=entry_link_key %}
       {%- endfor %}
     </p>
-    {%- endif %}
   </div>
-  {%- if e.image %}
-  <a class="entry-media" href="{{ e.image }}" target="_blank" rel="noopener">
-    <img src="{{ e.image }}" alt="{{ e.image_alt | default: e.title }}" loading="lazy" />
+  {%- if include.item.image %}
+  <a class="entry-media" href="{{ include.item.image }}" target="_blank" rel="noopener" data-edit-file="{{ include.key }}.image" data-accept="image/*" data-folder="assets/images">
+    <img src="{{ include.item.image }}" alt="{{ include.item.image_alt | default: include.item.title }}" loading="lazy" />
   </a>
   {%- endif %}
 </article>

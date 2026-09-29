@@ -1,19 +1,32 @@
 // On-page editor for baraona.org.
 //
 // Visitors never see it. It only wakes up in a browser that has signed in,
-// either here (add ?edit to any page's address) or at /admin. Text marked
-// data-edit="file.path.to.value" in the templates becomes editable in place,
-// the Colors and fonts panel edits _data/theme.yml, and Save commits every
-// changed _data/*.yml file to GitHub in one commit. GitHub Pages then
-// rebuilds the site in about a minute.
+// either here (the Edit link in the footer, or ?edit on any page) or at /admin.
+//
+// The templates describe what's editable with a few attributes, each holding
+// a path into the _data files ("news.items.0.text" is items[0].text in
+// _data/news.yml):
+//   data-edit="path"        text you can type into (data-edit-type="markdown"
+//                           opens a text box, "list" is comma-separated)
+//   data-edit-url="path"    a link's address, edited in a small popover
+//   data-edit-file="path"   a photo or file you can click to replace
+//   data-edit-list="path"   a list you can add to; its <template> is a blank item
+//   data-edit-item="path"   one item in a list, which you can remove
+//
+// Edits change a working copy of the data. Save compares it with the
+// original, applies only the differences to each file so comments and
+// formatting are kept, and commits everything to GitHub in one commit.
 
 const REPO = 'baraona/baraona.github.io';
 const BRANCH = 'master';
 const TOKEN_KEY = 'baraona-edit-token';
 const CMS_KEY = 'sveltia-cms.user'; // written by the /admin editor
 const YAML_LIB = 'https://cdn.jsdelivr.net/npm/yaml@2.9.1/+esm';
+const YAML_FORMAT = { lineWidth: 0, flowCollectionPadding: false };
 const THEME = '_data/theme.yml';
 const FONTS = '_data/fonts.yml';
+const KEY_ATTRS = ['data-edit', 'data-edit-url', 'data-edit-file', 'data-edit-list', 'data-edit-item'];
+const MAX_UPLOAD = 50 * 1024 * 1024;
 
 const COLOR_LABELS = {
   accent: 'Accent (links)',
@@ -25,12 +38,13 @@ const COLOR_LABELS = {
 };
 
 let token = readToken();
-let YAML;              // the yaml library, loaded when editing starts
+let YAML; // the yaml library, loaded when editing starts
 let editing = false;
-const data = {};       // file -> contents as plain objects, read when editing starts
-const changes = new Map(); // data-edit key -> { value, type }
-let theme;             // working copy of theme.yml, shown live
-let fonts;             // fonts.yml
+const data = {}; // file -> contents when Edit was clicked
+const work = {}; // file -> working copy with your edits
+const origin = new WeakMap(); // list item in work -> its index in data
+const uploads = new Map(); // repo path -> base64 contents of a new file
+let fonts;
 let ui;
 
 if (token || new URLSearchParams(location.search).has('edit')) boot();
@@ -51,13 +65,12 @@ function readToken() {
 }
 
 function signOut() {
-  if (changes.size && !confirm('Sign out and discard your unsaved changes?')) return;
+  if (isDirty() && !confirm('Sign out and discard your unsaved changes?')) return;
   try {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(CMS_KEY);
   } catch {}
-  changes.clear();
-  location.reload();
+  discard();
 }
 
 function showSignIn() {
@@ -129,23 +142,27 @@ async function readFile(path, ref) {
   return new TextDecoder().decode(bytes);
 }
 
-// Apply every change to the latest version of each file and commit them together.
 async function commitChanges() {
   const ref = await gh(`/git/ref/heads/${BRANCH}`);
   const head = await gh(`/git/commits/${ref.object.sha}`);
-  const byFile = new Map();
-  for (const [key, change] of changes) {
-    const { file, keys } = parseKey(key);
-    if (!byFile.has(file)) byFile.set(file, []);
-    byFile.get(file).push({ keys, ...change });
-  }
   const tree = [];
-  for (const [file, list] of byFile) {
-    const doc = YAML.parseDocument(await readFile(file, head.sha));
-    list.forEach((c) => setValue(doc, c.keys, c.value, c.type));
-    tree.push({ path: file, mode: '100644', type: 'blob', content: doc.toString({ lineWidth: 0, flowCollectionPadding: false }) });
+  const names = [];
+  for (const file of Object.keys(work)) {
+    if (same(work[file], data[file])) continue;
+    const text = await readFile(file, head.sha);
+    if (!same(YAML.parse(text) ?? {}, data[file])) {
+      throw new Error(`${short(file)} was changed somewhere else after you clicked Edit. Reload the page and make your edits again.`);
+    }
+    const doc = YAML.parseDocument(text);
+    doc.contents = sync(doc, doc.contents, data[file], work[file]);
+    tree.push({ path: file, mode: '100644', type: 'blob', content: doc.toString(YAML_FORMAT) });
+    names.push(short(file));
   }
-  const names = [...byFile.keys()].map((f) => f.replace('_data/', ''));
+  for (const [path, base64] of liveUploads()) {
+    const blob = await gh('/git/blobs', { method: 'POST', body: { content: base64, encoding: 'base64' } });
+    tree.push({ path, mode: '100644', type: 'blob', sha: blob.sha });
+    names.push(path.split('/').pop());
+  }
   const newTree = await gh('/git/trees', { method: 'POST', body: { base_tree: head.tree.sha, tree } });
   const commit = await gh('/git/commits', {
     method: 'POST',
@@ -155,7 +172,7 @@ async function commitChanges() {
 }
 
 // ------------------------------------------------------------
-// YAML
+// Data
 // ------------------------------------------------------------
 
 // "news.items.0.text" -> { file: "_data/news.yml", keys: ["items", 0, "text"] }
@@ -164,9 +181,37 @@ function parseKey(key) {
   return { file: `_data/${file}.yml`, keys: keys.map((k) => (/^\d+$/.test(k) ? Number(k) : k)) };
 }
 
-function lookup(key) {
+function getPath(key) {
   const { file, keys } = parseKey(key);
-  return keys.reduce((o, k) => (o == null ? o : o[k]), data[file]);
+  return keys.reduce((o, k) => (o == null ? undefined : o[k]), work[file]);
+}
+
+function setPath(key, value) {
+  const { file, keys } = parseKey(key);
+  let o = (work[file] ??= {});
+  keys.slice(0, -1).forEach((k, i) => {
+    if (o[k] == null || typeof o[k] !== 'object') o[k] = typeof keys[i + 1] === 'number' ? [] : {};
+    o = o[k];
+  });
+  o[keys.at(-1)] = value;
+}
+
+function deletePath(key) {
+  const { file, keys } = parseKey(key);
+  const parent = keys.slice(0, -1).reduce((o, k) => (o == null ? undefined : o[k]), work[file]);
+  if (parent && typeof parent === 'object') delete parent[keys.at(-1)];
+}
+
+function setField(key, value, type) {
+  if (type === 'list') value = value.split(',').map((s) => s.trim()).filter(Boolean);
+  if (value === '' || (Array.isArray(value) && !value.length)) {
+    deletePath(key); // an empty field is left out, which hides it on the site
+  } else {
+    const old = getPath(key);
+    if (typeof old === 'string' && old.endsWith('\n') && typeof value === 'string') value += '\n';
+    setPath(key, value);
+  }
+  refreshBar();
 }
 
 function toText(value, type) {
@@ -175,20 +220,80 @@ function toText(value, type) {
   return String(value).trim();
 }
 
-// Change one value in place so the file keeps its comments and formatting.
-function setValue(doc, keys, value, type) {
-  const node = doc.getIn(keys, true);
-  if (type === 'list') {
-    const list = doc.createNode(value.split(',').map((s) => s.trim()).filter(Boolean));
-    list.flow = node ? Boolean(node.flow) : true;
-    doc.setIn(keys, list);
-  } else if (value === '') {
-    doc.deleteIn(keys); // an empty field hides that line on the site
-  } else if (YAML.isScalar(node)) {
-    node.value = String(node.value).endsWith('\n') ? value + '\n' : value;
-  } else {
-    doc.setIn(keys, value);
+// Copy data, remembering where each list item came from so Save can keep its formatting.
+function clone(value) {
+  if (Array.isArray(value)) {
+    return value.map((item, i) => {
+      const copy = clone(item);
+      if (isObject(copy)) origin.set(copy, i);
+      return copy;
+    });
   }
+  if (isObject(value)) return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, clone(v)]));
+  return value;
+}
+
+// Bring a YAML node in line with `next`, reusing every part that didn't change.
+function sync(doc, node, orig, next) {
+  if (node && same(orig, next)) return node;
+  if (Array.isArray(next) && Array.isArray(orig) && YAML.isSeq(node) && next.every(isObject)) {
+    const spaced = node.items.some((n, i) => i > 0 && n.spaceBefore); // blank lines between items
+    node.items = next.map((item) => {
+      const i = origin.get(item);
+      return i != null && node.items[i] ? sync(doc, node.items[i], orig[i], item) : newNode(doc, item);
+    });
+    if (spaced) node.items.forEach((n, i) => { n.spaceBefore = i > 0; });
+    node.flow = false; // an empty `items: []` becomes a normal list once it has entries
+    return node;
+  }
+  if (isObject(next) && isObject(orig) && YAML.isMap(node)) {
+    Object.keys(orig).filter((k) => !(k in next)).forEach((k) => node.delete(k));
+    for (const [k, v] of Object.entries(next)) {
+      const child = node.get(k, true);
+      const synced = k in orig ? sync(doc, child, orig[k], v) : newNode(doc, v);
+      if (synced !== child) node.set(k, synced);
+    }
+    return node;
+  }
+  if (YAML.isScalar(node) && !isObject(next) && !Array.isArray(next)) {
+    node.value = next;
+    return node;
+  }
+  const fresh = newNode(doc, next);
+  if (YAML.isSeq(node) && YAML.isSeq(fresh)) fresh.flow = node.flow;
+  return fresh;
+}
+
+// New YAML in the same style as the hand-written files: fields in the usual
+// order, and short lists like skills on one line.
+const FIELD_ORDER = ['heading', 'title', 'name', 'label', 'file', 'caption', 'where', 'date', 'dates', 'text',
+  'description', 'skills', 'detail', 'year', 'url', 'alt', 'image', 'image_alt', 'links', 'items'];
+function newNode(doc, value) {
+  const rank = (k) => (FIELD_ORDER.includes(k) ? FIELD_ORDER.indexOf(k) : FIELD_ORDER.length);
+  const order = (v) => Array.isArray(v) ? v.map(order)
+    : isObject(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => rank(a) - rank(b)).map(([k, x]) => [k, order(x)]))
+    : v;
+  const node = doc.createNode(order(value));
+  const flowLists = (n) => {
+    if (YAML.isSeq(n) && n.items.length && n.items.every(YAML.isScalar)) n.flow = true;
+    if (YAML.isCollection(n)) n.items.forEach((item) => flowLists(YAML.isPair(item) ? item.value : item));
+  };
+  flowLists(node);
+  return node;
+}
+
+const isObject = (v) => v != null && typeof v === 'object' && !Array.isArray(v);
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const short = (file) => file.replace('_data/', '');
+
+// New files that something still points to (a file added then removed isn't uploaded).
+function liveUploads() {
+  const all = JSON.stringify(work);
+  return [...uploads].filter(([path]) => all.includes(path));
+}
+
+function isDirty() {
+  return Object.keys(work).some((f) => !same(work[f], data[f])) || liveUploads().length > 0;
 }
 
 // ------------------------------------------------------------
@@ -243,70 +348,351 @@ function refreshBar() {
   button('theme').hidden = !editing;
   button('cancel').hidden = !editing;
   button('save').hidden = !editing;
-  button('save').disabled = !changes.size;
-  button('save').textContent = changes.size ? `Save ${changes.size} change${changes.size > 1 ? 's' : ''}` : 'Save';
+  button('save').disabled = !editing || !isDirty();
 }
 
 // ------------------------------------------------------------
-// Editing text
+// Editing
 // ------------------------------------------------------------
 
 async function startEditing() {
   status('Loading…');
   try {
     YAML = YAML || (await import(YAML_LIB));
-    const fields = [...document.querySelectorAll('[data-edit]')];
-    const files = new Set([THEME, FONTS, ...fields.map((f) => parseKey(f.dataset.edit).file)]);
-    await Promise.all([...files].map(async (f) => { data[f] = YAML.parse(await readFile(f, BRANCH)); }));
-    theme = structuredClone(data[THEME]);
+    const keys = [...document.querySelectorAll(KEY_ATTRS.map((a) => `[${a}]`).join())]
+      .flatMap((node) => KEY_ATTRS.map((a) => node.getAttribute(a)).filter(Boolean));
+    const files = new Set([THEME, FONTS, ...keys.map((k) => parseKey(k).file)]);
+    await Promise.all([...files].map(async (f) => {
+      data[f] = YAML.parse(await readFile(f, BRANCH)) ?? {};
+      work[f] = clone(data[f]);
+    }));
     fonts = data[FONTS];
-    fields.forEach(makeEditable);
   } catch (error) {
     status(error.message, true);
     return;
   }
   editing = true;
   document.documentElement.classList.add('is-editing');
+  decorate(document.body);
   status('Click any outlined text to change it.');
   refreshBar();
 }
 
+// Make everything inside root editable and add the add/remove buttons.
+function decorate(root) {
+  within(root, '[data-edit]').forEach(makeEditable);
+  within(root, '[data-edit-file]').forEach((f) => { f.title = 'Click to upload a replacement'; });
+  within(root, '[data-edit-item]').forEach(addItemTools);
+  within(root, '[data-edit-list]').forEach(addListButton);
+}
+
+function within(root, selector) {
+  return [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)];
+}
+
 function makeEditable(field) {
   const type = field.dataset.editType || 'text';
-  const value = lookup(field.dataset.edit);
   if (type === 'markdown') {
     field.tabIndex = 0;
     field.title = 'Click to edit';
     return;
   }
   // Show what's in the repo now, in case the site hasn't rebuilt since the last save.
-  if (value != null && toText(value, type) !== field.textContent.trim()) field.textContent = toText(value, type);
+  const value = toText(getPath(field.dataset.edit), type);
+  if (value !== field.textContent.trim()) field.textContent = value;
   field.contentEditable = 'plaintext-only';
   if (field.contentEditable !== 'plaintext-only') field.contentEditable = 'true';
-  field.spellcheck = true;
 }
 
-function record(key, value, type) {
-  if (value === toText(lookup(key), type)) changes.delete(key);
-  else changes.set(key, { value, type });
+function stopEditing() {
+  editing = false;
+  document.documentElement.classList.remove('is-editing');
+  document.querySelectorAll('.edit-control').forEach((c) => c.remove());
+  document.querySelectorAll(KEY_ATTRS.map((a) => `[${a}]`).join()).forEach((f) => {
+    f.removeAttribute('contenteditable');
+    f.removeAttribute('tabindex');
+    f.removeAttribute('title');
+  });
+  hideLinkPop();
+  ui.querySelector('.edit-theme')?.remove();
+  applyTheme();
   refreshBar();
-  if (changes.size) status('');
 }
+
+function cancel() {
+  if (isDirty() && !confirm('Discard your unsaved changes?')) return;
+  discard();
+}
+
+function discard() {
+  Object.keys(work).forEach((f) => { work[f] = data[f]; });
+  uploads.clear();
+  location.reload();
+}
+
+async function save() {
+  // Items added but never filled in aren't saved.
+  [...document.querySelectorAll('[data-edit-item]')].reverse().forEach((item) => {
+    const value = getPath(item.dataset.editItem);
+    if (isObject(value) && !Object.keys(value).length) removeItem(item);
+  });
+  if (!isDirty()) { stopEditing(); status('Nothing to save.'); return; }
+  const button = ui.querySelector('[data-act="save"]');
+  button.disabled = true;
+  status('Saving…');
+  try {
+    try {
+      await commitChanges();
+    } catch (error) {
+      if (error.status !== 422) throw error;
+      await commitChanges(); // someone else committed at the same moment; retry on top of it
+    }
+  } catch (error) {
+    status(error.message, true);
+    button.disabled = false;
+    return;
+  }
+  uploads.clear();
+  stopEditing();
+  status('Saved. The live site updates in about a minute.');
+}
+
+// ------------------------------------------------------------
+// Adding and removing
+// ------------------------------------------------------------
+
+function itemsOf(list) {
+  return [...list.querySelectorAll('[data-edit-item]')].filter((i) => i.parentElement.closest('[data-edit-list]') === list);
+}
+
+function addListButton(list) {
+  const label = list.dataset.addLabel || 'Add';
+  const button = el(`<button type="button" class="edit-add edit-control" data-tool="add">+ ${label}</button>`);
+  button.list = list;
+  if (list.dataset.add === 'start') list.before(button);
+  else list.after(button);
+}
+
+function addItemTools(item) {
+  item.querySelector(':scope > .edit-item-tools')?.remove();
+  if (item.matches('[data-edit-url]') || item.querySelector(':scope > [data-edit-url]')) return; // links use the link popover
+  const list = item.parentElement.closest('[data-edit-list]');
+  const name = (list && list.dataset.itemName) || 'item';
+  const image = item.matches('.entry')
+    ? (item.querySelector('.entry-media') ? '<button type="button" data-tool="unimage">Remove image</button>' : '<button type="button" data-tool="image">Add image</button>')
+    : '';
+  item.append(el(`<div class="edit-item-tools edit-control">${image}<button type="button" data-tool="remove">Remove ${name}</button></div>`));
+}
+
+function addItem(list) {
+  const listKey = list.dataset.editList;
+  let items = getPath(listKey);
+  if (!Array.isArray(items)) { items = []; setPath(listKey, items); }
+  const atStart = list.dataset.add === 'start';
+  const index = atStart ? 0 : items.length;
+  items.splice(index, 0, {});
+
+  const template = [...list.children].find((c) => c.matches('template[data-edit-template]'));
+  const item = template.content.cloneNode(true).firstElementChild;
+  for (const node of [item, ...item.querySelectorAll('*')]) {
+    for (const a of KEY_ATTRS) {
+      if (node.hasAttribute(a)) node.setAttribute(a, node.getAttribute(a).replace('__KEY__', `${listKey}.${index}`));
+    }
+  }
+  const existing = itemsOf(list);
+  if (atStart && existing.length) existing[0].before(item);
+  else if (!atStart && existing.length) existing.at(-1).after(item);
+  else template.after(item);
+
+  renumber();
+  decorate(item);
+  refreshBar();
+  const link = item.matches('[data-edit-url]') ? item : item.querySelector(':scope > [data-edit-url]');
+  (link || item.querySelector('[data-edit]') || item).focus?.();
+  if (link) showLinkPop(link); // a new link needs an address
+  return item;
+}
+
+function removeItem(item) {
+  const key = item.dataset.editItem;
+  const cut = key.lastIndexOf('.');
+  const items = getPath(key.slice(0, cut));
+  if (Array.isArray(items)) items.splice(Number(key.slice(cut + 1)), 1);
+  if (item.contains(document.activeElement)) hideLinkPop();
+  item.remove();
+  renumber();
+  refreshBar();
+}
+
+// After adding or removing, give every item the path of its new position.
+function renumber() {
+  for (const list of document.querySelectorAll('[data-edit-list]')) {
+    const listKey = list.dataset.editList;
+    itemsOf(list).forEach((item, i) => {
+      const old = item.dataset.editItem;
+      const now = `${listKey}.${i}`;
+      if (old === now) return;
+      for (const node of [item, ...item.querySelectorAll('*')]) {
+        for (const a of KEY_ATTRS) {
+          const v = node.getAttribute(a);
+          if (v && (v === old || v.startsWith(old + '.'))) node.setAttribute(a, now + v.slice(old.length));
+        }
+      }
+    });
+  }
+}
+
+function runTool(button) {
+  const tool = button.dataset.tool;
+  const item = button.closest('[data-edit-item]');
+  if (tool === 'add') {
+    const list = button.list;
+    if ('addFile' in list.dataset) {
+      chooseFile('image/*,video/*,application/pdf', (file) => {
+        const added = addItem(list);
+        assignFile(added.querySelector('[data-edit-file]'), file);
+      });
+    } else {
+      addItem(list);
+    }
+  }
+  if (tool === 'remove') removeItem(item);
+  if (tool === 'image') {
+    chooseFile('image/*', (file) => {
+      const key = `${item.dataset.editItem}.image`;
+      const media = el(`<a class="entry-media" data-edit-file="${key}" data-accept="image/*" data-folder="assets/images" title="Click to upload a replacement"></a>`);
+      item.append(media);
+      item.classList.add('entry--media');
+      assignFile(media, file);
+      addItemTools(item);
+    });
+  }
+  if (tool === 'unimage') {
+    deletePath(`${item.dataset.editItem}.image`);
+    deletePath(`${item.dataset.editItem}.image_alt`);
+    item.querySelector('.entry-media')?.remove();
+    item.classList.remove('entry--media');
+    addItemTools(item);
+    refreshBar();
+  }
+}
+
+// ------------------------------------------------------------
+// Files
+// ------------------------------------------------------------
+
+function chooseFile(accept, then) {
+  const input = el(`<input type="file" accept="${accept}" hidden />`);
+  ui.append(input);
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    input.remove();
+    if (!file) return;
+    if (file.size > MAX_UPLOAD) { status('That file is over 50 MB. Try compressing it, or put videos on YouTube and link to them.', true); return; }
+    then(file);
+  });
+  input.click();
+}
+
+// Upload `file` for the field at `key`. A file of the same type replaces the
+// old one at the same address (so links to your CV keep working); anything
+// else is saved alongside it under its own name.
+function assignFile(target, file, key = target.dataset.editFile, folder = target.dataset.folder) {
+  const ext = (name) => (name.match(/\.([^./]+)$/) || ['', ''])[1].toLowerCase();
+  const old = String(getPath(key) || '');
+  const oldPath = old.replace(/^\//, '');
+  let path = oldPath;
+  if (!oldPath || /^[a-z]+:/i.test(old) || ext(oldPath) !== ext(file.name)) {
+    const dir = folder || oldPath.split('/').slice(0, -1).join('/') || 'assets/docs';
+    const name = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/-+/g, '-');
+    path = `${dir}/${name}`;
+    setField(key, '/' + path);
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    uploads.set(path, reader.result.split(',')[1]);
+    preview(target, URL.createObjectURL(file), file.type);
+    status(`“${file.name}” will be uploaded when you save.`);
+    refreshBar();
+  };
+  reader.readAsDataURL(file);
+}
+
+function preview(target, url, type) {
+  if (target.matches('a') && !target.querySelector('img')) { target.href = url; return; }
+  target.innerHTML =
+    type.startsWith('image/') ? `<img src="${url}" alt="" />` :
+    type.startsWith('video/') ? `<video src="${url}" controls playsinline></video>` :
+    '<span class="tile-file"><span class="tile-file-ext">FILE</span></span>';
+}
+
+// ------------------------------------------------------------
+// Link popover
+// ------------------------------------------------------------
+
+function showLinkPop(link) {
+  if (ui.querySelector('.edit-pop')?.link === link) return;
+  hideLinkPop();
+  const pop = el(`
+    <div class="edit-pop" role="group" aria-label="Link">
+      <label>Address <input type="text" inputmode="url" placeholder="https://… or mailto:you@example.com" /></label>
+      <div class="edit-row">
+        <button type="button" data-pop="upload">Upload a file</button>
+        <button type="button" data-pop="remove">Remove link</button>
+      </div>
+    </div>`);
+  pop.link = link;
+  const input = pop.querySelector('input');
+  input.value = getPath(link.dataset.editUrl) || '';
+  input.addEventListener('input', () => {
+    setField(link.dataset.editUrl, input.value.trim());
+    link.href = input.value.trim() || '#';
+  });
+  // Keep focus in place so the popover doesn't close before a button click lands.
+  pop.addEventListener('mousedown', (e) => { if (e.target.closest('button')) e.preventDefault(); });
+  pop.addEventListener('click', (e) => {
+    const act = e.target.closest('[data-pop]')?.dataset.pop;
+    if (act === 'remove') removeItem(link.closest('[data-edit-item]'));
+    if (act === 'upload') {
+      chooseFile('*/*', (file) => {
+        assignFile(link, file, link.dataset.editUrl, 'assets/docs');
+        input.value = getPath(link.dataset.editUrl) || '';
+      });
+    }
+  });
+  pop.addEventListener('focusout', () => setTimeout(closeLinkPopIfDone));
+  ui.append(pop);
+  const r = link.getBoundingClientRect();
+  pop.style.top = `${r.bottom + scrollY + 8}px`;
+  pop.style.left = `${Math.max(8, Math.min(r.left + scrollX, scrollX + innerWidth - pop.offsetWidth - 8))}px`;
+}
+
+function closeLinkPopIfDone() {
+  const pop = ui.querySelector('.edit-pop');
+  if (pop && !pop.contains(document.activeElement) && document.activeElement !== pop.link) hideLinkPop();
+}
+
+function hideLinkPop() {
+  ui?.querySelector('.edit-pop')?.remove();
+}
+
+// ------------------------------------------------------------
+// Markdown fields
+// ------------------------------------------------------------
 
 function openMarkdown(field) {
   const key = field.dataset.edit;
-  const change = changes.get(key);
   const box = el(`
-    <div class="edit-md-box">
+    <div class="edit-md-box edit-control">
       <textarea class="edit-md" spellcheck="true"></textarea>
       <p class="edit-hint">Links: [text](https://…) · **bold** · *italic* · blank line for a new paragraph</p>
     </div>`);
   const area = box.querySelector('textarea');
-  area.value = change ? change.value : toText(lookup(key));
+  area.value = toText(getPath(key));
   field.hidden = true;
   field.after(box);
   const fit = () => { area.style.height = 'auto'; area.style.height = area.scrollHeight + 2 + 'px'; };
-  area.addEventListener('input', () => { fit(); record(key, area.value.trim(), 'markdown'); });
+  area.addEventListener('input', () => { fit(); setField(key, area.value.trim()); });
   area.addEventListener('blur', () => {
     field.innerHTML = renderMarkdown(area.value, field.tagName === 'SPAN');
     field.hidden = false;
@@ -324,58 +710,24 @@ function renderMarkdown(src, inline) {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
     .replace(/(^|\s)_([^_\n]+)_(?=\s|$|[.,;:!?])/g, '$1<em>$2</em>');
+  if (!src.trim()) return '';
   if (inline) return span(src);
   return src.trim().split(/\n\s*\n/).map((p) => `<p>${span(p)}</p>`).join('\n');
 }
 
-function cancel() {
-  if (changes.size && !confirm('Discard your unsaved changes?')) return;
-  changes.clear();
-  location.reload();
-}
-
-async function save() {
-  const button = ui.querySelector('[data-act="save"]');
-  button.disabled = true;
-  status('Saving…');
-  try {
-    try {
-      await commitChanges();
-    } catch (error) {
-      if (error.status !== 422) throw error;
-      await commitChanges(); // someone else committed at the same moment; retry on top of it
-    }
-  } catch (error) {
-    status(error.message, true);
-    button.disabled = false;
-    return;
-  }
-  changes.clear();
-  stopEditing();
-  status('Saved. The live site updates in about a minute.');
-}
-
-function stopEditing() {
-  editing = false;
-  document.documentElement.classList.remove('is-editing');
-  document.querySelectorAll('[data-edit]').forEach((f) => {
-    f.removeAttribute('contenteditable');
-    f.removeAttribute('tabindex');
-    f.removeAttribute('title');
-  });
-  ui.querySelector('.edit-theme')?.remove();
-  applyTheme();
-  refreshBar();
-}
+// ------------------------------------------------------------
+// Page events while editing
+// ------------------------------------------------------------
 
 document.addEventListener('input', (e) => {
   const field = editing && e.target.closest?.('[data-edit]');
   if (!field || field.dataset.editType === 'markdown') return;
-  record(field.dataset.edit, field.textContent.trim(), field.dataset.editType || 'text');
+  setField(field.dataset.edit, field.textContent.trim(), field.dataset.editType);
 });
 
 document.addEventListener('keydown', (e) => {
   if (!editing) return;
+  if (e.key === 'Escape') hideLinkPop();
   const field = e.target.closest?.('[data-edit]');
   if (!field) return;
   if (field.dataset.editType === 'markdown') {
@@ -390,20 +742,34 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('paste', (e) => {
   if (!editing || !e.target.closest?.('[contenteditable]')) return;
   e.preventDefault();
-  const text = e.clipboardData.getData('text/plain').replace(/\s+/g, ' ');
-  document.execCommand('insertText', false, text);
+  document.execCommand('insertText', false, e.clipboardData.getData('text/plain').replace(/\s+/g, ' '));
+});
+
+document.addEventListener('focusin', (e) => {
+  if (!editing) return;
+  const link = e.target.closest?.('[data-edit-url]');
+  if (link) showLinkPop(link);
+  else setTimeout(closeLinkPopIfDone);
 });
 
 document.addEventListener('click', (e) => {
   if (!editing || e.target.closest('#edit-ui')) return;
-  const field = e.target.closest('[data-edit]');
+  const control = e.target.closest('.edit-control');
+  if (control) {
+    const tool = e.target.closest('[data-tool]');
+    if (tool) { e.preventDefault(); runTool(tool); }
+    return;
+  }
   // Don't follow links while editing: clicking a link's text edits it.
   if (e.target.closest('a, button')) e.preventDefault();
+  const fileTarget = e.target.closest('[data-edit-file]');
+  if (fileTarget) { chooseFile(fileTarget.dataset.accept || '*/*', (file) => assignFile(fileTarget, file)); return; }
+  const field = e.target.closest('[data-edit]');
   if (field && field.dataset.editType === 'markdown' && !field.hidden) openMarkdown(field);
 }, true);
 
 window.addEventListener('beforeunload', (e) => {
-  if (changes.size) e.preventDefault();
+  if (editing && isDirty()) e.preventDefault();
 });
 
 // ------------------------------------------------------------
@@ -414,6 +780,7 @@ function toggleThemePanel() {
   const open = ui.querySelector('.edit-theme');
   if (open) { open.remove(); applyTheme(); return; }
 
+  const theme = work[THEME];
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   const fontOptions = (current) => Object.keys(fonts)
     .map((name) => `<option${name === current ? ' selected' : ''}>${name}</option>`).join('');
@@ -441,31 +808,29 @@ function toggleThemePanel() {
     </section>`);
   ui.prepend(panel);
 
-  let preview = dark ? 'dark' : 'light';
+  let mode = dark ? 'dark' : 'light';
   panel.addEventListener('click', (e) => {
     const tab = e.target.closest('[data-mode]');
     if (!tab) return;
-    preview = tab.dataset.mode;
+    mode = tab.dataset.mode;
     panel.querySelectorAll('[data-mode]').forEach((t) => t.setAttribute('aria-selected', t === tab));
-    panel.querySelectorAll('[data-colors]').forEach((c) => { c.hidden = c.dataset.colors !== preview; });
-    applyTheme(preview);
+    panel.querySelectorAll('[data-colors]').forEach((c) => { c.hidden = c.dataset.colors !== mode; });
+    applyTheme(mode);
   });
   panel.addEventListener('input', (e) => {
     const key = e.target.dataset.key;
     if (!key) return;
-    const [, ...path] = key.split('.');
-    const last = path.pop();
-    path.reduce((o, k) => o[k], theme)[last] = e.target.value;
+    setField(key, e.target.value);
     const code = e.target.parentElement.querySelector('code');
     if (code) code.textContent = e.target.value;
-    record(key, e.target.value, 'text');
-    applyTheme(preview);
+    applyTheme(mode);
   });
-  applyTheme(preview);
+  applyTheme(mode);
 }
 
 // Same output as the <style id="theme"> block in _includes/head.html.
 function applyTheme(forceMode) {
+  const theme = work[THEME];
   if (!theme) return;
   const vars = (set) => Object.entries(set).map(([k, v]) => `--${k.replace(/_/g, '-')}: ${v};`).join(' ');
   const font = (name) => `'${name}', ${fonts[name] ? fonts[name].fallback : 'serif'}`;

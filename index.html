@@ -13,15 +13,11 @@
 
   <header class="bar">
     <nav class="bar-inner" aria-label="Sections">
-      <a class="bar-name" href="#top">{{ me.name }}</a>
+      <a class="bar-name" href="#top" data-edit="profile.site_name">{{ me.site_name }}</a>
       <ul class="bar-links">
         <li><a href="#about">About</a></li>
-        {%- if site.data.news.items.size > 0 %}<li><a href="#news">News</a></li>{% endif %}
-        {%- if site.data.research.items.size > 0 %}<li><a href="#research">Research</a></li>{% endif %}
-        {%- if site.data.projects.items.size > 0 %}<li><a href="#projects">Projects</a></li>{% endif %}
-        {%- if site.data.awards.items.size > 0 %}<li><a href="#awards">Awards</a></li>{% endif %}
         <li><a href="/life/">Life</a></li>
-        {%- if me.cv %}<li><a class="bar-cv" href="{{ me.cv }}" target="_blank" rel="noopener">CV</a></li>{% endif %}
+        {%- if me.cv %}<li><a class="bar-cv" href="{{ me.cv }}" target="_blank" rel="noopener" data-edit-file="profile.cv">CV</a></li>{% endif %}
       </ul>
     </nav>
   </header>
@@ -29,19 +25,21 @@
   <main class="page" id="top">
     <section class="intro" aria-label="Introduction">
       {%- if me.photo %}
-      <div class="portrait"><img src="{{ me.photo }}" alt="Portrait of {{ me.name }}" /></div>
+      <div class="portrait" data-edit-file="profile.photo" data-accept="image/*" data-folder="assets/images"><img src="{{ me.photo }}" alt="Portrait of {{ me.name }}" /></div>
       {%- endif %}
       <div class="intro-text">
-        <h1 data-edit="profile.name">{{ me.name }}</h1>
-        <p class="tagline" data-edit="profile.tagline">{{ me.tagline }}</p>
-        {%- if me.status %}
-        <p class="status" data-edit="profile.status">{{ me.status }}</p>
-        {%- endif %}
-        <ul class="contact">
+        <h1 data-edit="profile.name" data-placeholder="Your name">{{ me.name }}</h1>
+        <p class="tagline" data-edit="profile.tagline" data-placeholder="Tagline">{{ me.tagline }}</p>
+        <p class="status" data-edit="profile.status" data-placeholder="Status line (optional)">{{ me.status }}</p>
+        <ul class="contact" data-edit-list="profile.links" data-add="end" data-add-label="Add link">
+          <template data-edit-template>{% include link.html key="__KEY__" li=true %}</template>
           {%- for link in me.links %}
-          <li><a href="{{ link.url }}"{% unless link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %} data-edit="profile.links.{{ forloop.index0 }}.label">{{ link.label }}</a></li>
+          {%- capture k %}profile.links.{{ forloop.index0 }}{% endcapture %}
+          {% include link.html link=link key=k li=true %}
           {%- endfor %}
-          {%- if me.cv %}<li><a href="{{ me.cv }}" target="_blank" rel="noopener">CV (PDF)</a></li>{% endif %}
+          {%- if me.cv %}
+          <li><a href="{{ me.cv }}" target="_blank" rel="noopener" data-edit-file="profile.cv" data-accept="application/pdf,.pdf" data-folder="assets/docs">CV (PDF)</a></li>
+          {%- endif %}
         </ul>
       </div>
     </section>
@@ -49,56 +47,44 @@
     <div id="content">
       <section class="block" id="about">
         <h2>About</h2>
-        <div class="prose" data-edit="profile.about" data-edit-type="markdown">
-          {{ me.about | markdownify }}
+        <div class="prose" data-edit="profile.about" data-edit-type="markdown" data-placeholder="About you">{{ me.about | markdownify }}</div>
+      </section>
+
+      <section class="block block--list" id="news">
+        <h2>News</h2>
+        <ul class="news" data-edit-list="news.items" data-add="start" data-add-label="Add news" data-item-name="news item">
+          <template data-edit-template>{% include news-item.html key="__KEY__" %}</template>
+          {%- for item in site.data.news.items %}
+          {%- capture k %}news.items.{{ forloop.index0 }}{% endcapture %}
+          {% include news-item.html item=item key=k %}
+          {%- endfor %}
+        </ul>
+      </section>
+
+      {%- assign sections = "research,projects" | split: "," %}
+      {%- for id in sections %}
+      <section class="block block--list" id="{{ id }}">
+        <h2>{{ id | capitalize }}</h2>
+        <div data-edit-list="{{ id }}.items" data-add="start" data-add-label="Add {% if id == 'projects' %}project{% else %}research{% endif %}" data-item-name="entry">
+          <template data-edit-template>{% include entry.html key="__KEY__" %}</template>
+          {%- for item in site.data[id].items %}
+          {%- capture k %}{{ id }}.items.{{ forloop.index0 }}{% endcapture %}
+          {% include entry.html item=item key=k %}
+          {%- endfor %}
         </div>
       </section>
+      {%- endfor %}
 
-      {%- if site.data.news.items.size > 0 %}
-      <section class="block" id="news">
-        <h2>News</h2>
-        <ul class="news">
-          {%- for item in site.data.news.items %}
-          <li>
-            <span class="news-date" data-edit="news.items.{{ forloop.index0 }}.date">{{ item.date }}</span>
-            <span class="news-text" data-edit="news.items.{{ forloop.index0 }}.text" data-edit-type="markdown">{{ item.text | markdownify | remove: '<p>' | remove: '</p>' | strip }}</span>
-          </li>
-          {%- endfor %}
-        </ul>
-      </section>
-      {%- endif %}
-
-      {%- if site.data.research.items.size > 0 %}
-      <section class="block" id="research">
-        <h2>Research</h2>
-        {%- for item in site.data.research.items %}
-          {% include entry.html item=item key="research" index=forloop.index0 %}
-        {%- endfor %}
-      </section>
-      {%- endif %}
-
-      {%- if site.data.projects.items.size > 0 %}
-      <section class="block" id="projects">
-        <h2>Projects</h2>
-        {%- for item in site.data.projects.items %}
-          {% include entry.html item=item key="projects" index=forloop.index0 %}
-        {%- endfor %}
-      </section>
-      {%- endif %}
-
-      {%- if site.data.awards.items.size > 0 %}
-      <section class="block" id="awards">
+      <section class="block block--list" id="awards">
         <h2>Honors and awards</h2>
-        <ul class="awards">
-          {%- for a in site.data.awards.items %}
-          <li>
-            <span class="award-name"><span data-edit="awards.items.{{ forloop.index0 }}.name">{{ a.name }}</span>{% if a.detail %}<span class="award-detail">, <span data-edit="awards.items.{{ forloop.index0 }}.detail">{{ a.detail }}</span></span>{% endif %}</span>
-            {%- if a.year %}<span class="award-year" data-edit="awards.items.{{ forloop.index0 }}.year">{{ a.year }}</span>{% endif %}
-          </li>
+        <div data-edit-list="awards.groups" data-add="end" data-add-label="Add award group" data-item-name="group">
+          <template data-edit-template>{% include award-group.html key="__KEY__" %}</template>
+          {%- for group in site.data.awards.groups %}
+          {%- capture k %}awards.groups.{{ forloop.index0 }}{% endcapture %}
+          {% include award-group.html group=group key=k %}
           {%- endfor %}
-        </ul>
+        </div>
       </section>
-      {%- endif %}
     </div>
   </main>
 
@@ -106,27 +92,5 @@
     <p>{{ me.name }}, {{ me.location }}. Updated {{ site.time | date: "%B %Y" }}.</p>
     <p><a href="#top">Back to top</a><a class="foot-edit" href="?edit">Edit</a></p>
   </footer>
-
-  <script>
-    // Underline the nav link for the section on screen.
-    (function () {
-      var links = document.querySelectorAll('.bar-links a[href^="#"]');
-      if (!('IntersectionObserver' in window) || !links.length) return;
-      var byId = {};
-      links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
-      var obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (!e.isIntersecting) return;
-          links.forEach(function (l) { l.removeAttribute('aria-current'); });
-          var a = byId[e.target.id];
-          if (a) a.setAttribute('aria-current', 'true');
-        });
-      }, { rootMargin: '-40% 0px -55% 0px' });
-      Object.keys(byId).forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) obs.observe(el);
-      });
-    })();
-  </script>
 </body>
 </html>

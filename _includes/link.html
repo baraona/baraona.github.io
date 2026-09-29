@@ -1,0 +1,4 @@
+{%- comment -%} A link with a label. Pass li=true to wrap it in a list item. {%- endcomment -%}
+{%- if include.li %}<li data-edit-item="{{ include.key }}">{% endif -%}
+<a href="{{ include.link.url }}"{% unless include.link.url contains 'mailto:' %} target="_blank" rel="noopener"{% endunless %}{% unless include.li %} data-edit-item="{{ include.key }}"{% endunless %} data-edit="{{ include.key }}.label" data-edit-url="{{ include.key }}.url" data-placeholder="Link text">{{ include.link.label }}</a>
+{%- if include.li %}</li>{% endif -%}

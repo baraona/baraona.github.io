@@ -1,0 +1,4 @@
+<li data-edit-item="{{ include.key }}">
+  <span class="news-date" data-edit="{{ include.key }}.date" data-placeholder="Date">{{ include.item.date }}</span>
+  <span class="news-text" data-edit="{{ include.key }}.text" data-edit-type="markdown" data-placeholder="What happened">{% if include.item.text %}{{ include.item.text | markdownify | remove: '<p>' | remove: '</p>' | strip }}{% endif %}</span>
+</li>

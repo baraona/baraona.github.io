@@ -1,0 +1,10 @@
+<div class="awards-group" data-edit-item="{{ include.key }}">
+  <h3 class="awards-heading" data-edit="{{ include.key }}.heading" data-placeholder="Heading, e.g. Northeastern University">{{ include.group.heading }}</h3>
+  <ul class="awards" data-edit-list="{{ include.key }}.items" data-add="end" data-add-label="Add award" data-item-name="award">
+    <template data-edit-template>{% include award-item.html key="__KEY__" %}</template>
+    {%- for award in include.group.items %}
+    {%- capture award_key %}{{ include.key }}.items.{{ forloop.index0 }}{% endcapture %}
+    {% include award-item.html award=award key=award_key %}
+    {%- endfor %}
+  </ul>
+</div>
