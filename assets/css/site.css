@@ -255,6 +255,8 @@ ul { list-style: none; }
   color: var(--text-faint);
 }
 .foot a { color: var(--text-soft); }
+.foot .foot-edit { margin-left: 18px; color: var(--text-faint); opacity: 0.6; }
+.foot .foot-edit:hover { opacity: 1; }
 
 /* ------------------------------------------------------------
    Small screens
