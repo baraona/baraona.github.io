@@ -3,11 +3,8 @@
 # To edit by hand: copy an entry, paste it right under "items:", keep the indentation.
 
 items:
-  - date: "2025"
-    text: "Started as a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home) at UT Austin, working on personalized speech recognition for disordered speech."
+  - date: "Jan 2026"
+    text: "Joined the [Wang Lab at UT Austin]((https://slhs.utexas.edu/research/wang-lab/home) as a Graduate Research Assistant, developing adaptive signal processing pipelines for speech recognition in clinical populations, with applications in biomedical sensing and wireless communication systems."
 
-  - date: "2025"
-    text: "Presented VitalLink at Northeastern's 41st ECE Capstone Design Competition."
-
-  - date: "2023"
-    text: "Joined the Action Lab at Northeastern through the UPLIFT Program to work on human-robot collaboration research."
+  - date: "Dec 2025"
+    text: "[Designed and presented VitalLink at Northeastern’s 41st ECE Capstone Design Competition](https://ece.northeastern.edu/wp-content/uploads/sites/5/images/capstone/capstone-design-abstracts-fall-2025.pdf#page=7) as the culminating senior engineering project of my BS in Electrical and Computer Engineering: a BLE wireless sensing system streaming real-time physiological signals for clinical triage."
