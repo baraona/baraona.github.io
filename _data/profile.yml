@@ -8,11 +8,11 @@ location: "Austin, TX"
 photo: assets/images/AlejandroBaraona.jpeg
 cv: assets/docs/BaraonaResume.pdf
 about: |
-  I am a graduate Electrical and Computer Engineering student at the University of Texas at Austin, where I work as a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home). My research focuses on signal processing and adaptive machine learning for challenging acoustic environments, developing speaker-adaptive architectures that extract and interpret meaningful signal features under conditions of high variability and noise, across diverse speaker populations at scale.
+  I am a graduate student in Electrical and Computer Engineering at the University of Texas at Austin, where I work as a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/people). My research focuses on signal processing and adaptive machine learning for challenging acoustic environments, developing speaker-adaptive architectures that extract and interpret meaningful signal features under conditions of high variability and noise, across diverse speaker populations at scale.
 
-  My undergraduate work at Northeastern grounded me in physical sensing systems: PCB design, embedded firmware, RF wireless systems including BLE, and sensor integration in a regulated instrumentation environment. My graduate research addresses the computational layer: adaptive signal processing pipelines, feature conditioning, and large-scale model training on HPC clusters. I am drawn to problems where what the hardware can measure determines what the algorithm can solve, and where both must be optimized together. 
+  My undergraduate work at Northeastern grounded me in physical sensing systems: PCB design, embedded firmware, RF wireless systems including BLE, and sensor integration in a regulated instrumentation environment. My graduate research addresses the computational layer: adaptive signal processing pipelines, feature conditioning, and large-scale model training on HPC clusters. I am drawn to problems where what the hardware can measure determines what the algorithm can solve, and where both must be optimized together.
 
-  My current research interests are in sensor design and physical signal acquisition, with applications in biomedical and wireless sensing systems.
+  My current research interests center on sensor design and physical signal acquisition, with applications in biomedical and wireless sensing systems.
 links:
   - label: Email
     url: mailto:ajb6884@my.utexas.edu
