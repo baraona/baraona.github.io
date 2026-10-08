@@ -3,7 +3,7 @@
 name: "Alejandro Baraona"
 site_name: "baraona.org" # shown at the top left of every page
 description: "Alejandro Baraona is an ECE graduate student at UT Austin researching personalized speech recognition for people with disordered speech."
-tagline: "Electrical and computer engineer. MS student at UT Austin, BS from Northeastern. I build AI and hardware for biomedical and assistive devices."
+tagline: "Electrical and computer engineer. MS student at UT Austin, BS from Northeastern. I design sensing systems and the algorithms that interpret them."
 location: "Austin, TX"
 photo: assets/images/AlejandroBaraona.jpeg
 cv: assets/docs/BaraonaResume.pdf
