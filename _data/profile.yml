@@ -8,9 +8,9 @@ location: "Austin, TX"
 photo: assets/images/AlejandroBaraona.jpeg
 cv: assets/docs/BaraonaResume.pdf
 about: |
-  I'm a graduate student in Electrical and Computer Engineering at the University of Texas at Austin and a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home). My research focuses on personalized automatic speech recognition for people with disordered speech, including stuttering, dysarthria, and apraxia, using adaptive pipelines that improve over time for each user.
+  I am a graduate Electrical and Computer Engineering student at the University of Texas at Austin, where I work as a Graduate Research Assistant in the [Wang Lab](https://slhs.utexas.edu/research/wang-lab/home). My research focuses on signal processing and adaptive machine learning for challenging acoustic environments, developing speaker-adaptive architectures that extract and interpret meaningful signal features under conditions of high variability and noise, across diverse speaker populations at scale.
 
-  My undergraduate training at Northeastern was rooted in hardware: PCB design, embedded systems, and hands-on lab work. My graduate research builds on that foundation with software and machine learning, and I'm most at home where the two meet, building biomedical devices and tools that improve people's lives.
+  My undergraduate work at Northeastern grounded me in physical sensing systems: PCB design, embedded firmware, RF wireless systems including BLE, and sensor integration in a regulated instrumentation environment. My graduate research addresses the computational layer: adaptive signal processing pipelines, feature conditioning, and large-scale model training on HPC clusters. I am drawn to problems where what the hardware can measure determines what the algorithm can solve, and where both must be optimized together rather than in isolation.
 links:
   - label: Email
     url: mailto:ajb6884@my.utexas.edu
